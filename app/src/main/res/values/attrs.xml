@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="ItemListView">
+        <attr name="itemType" format="enum">
+            <enum name="LIST" value="0"/>
+            <enum name="RELATED" value="1"/>
+            <enum name="PREVIOUS" value="2"/>
+            <enum name="NEXT" value="3"/>
+            <enum name="SEARCH" value="4"/>
+        </attr>
+    </declare-styleable>
+</resources>

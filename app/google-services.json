@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "492763130726",
+    "firebase_url": "https://videos-231610.firebaseio.com",
+    "project_id": "videos-231610",
+    "storage_bucket": "videos-231610.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:492763130726:android:f07b9dd5d9fd6eee",
+        "android_client_info": {
+          "package_name": "com.jbak.videos"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "492763130726-8ounpqr7g5c0egj3o633vekf4scb69dn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jbak.videos",
+            "certificate_hash": "9d19ee4e350bf63be67dd9391b39482a30afcf4a"
+          }
+        },
+        {
+          "client_id": "492763130726-albe343h7103kpe7la3c2nfvpjv3gapt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCddubhfNIi2IwDaDHCXglx-ermNPO5pHY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "492763130726-albe343h7103kpe7la3c2nfvpjv3gapt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

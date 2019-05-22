@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group >
+    <item android:id="@+id/youtube_provider"
+          android:title="@string/youtube_provider" />
+    <item android:id="@+id/rutube_provider"
+        android:title="@string/rutube_provider"/>
+        <item android:id="@+id/hdrezka_provider"
+              android:title="@string/hdrezka_provider"/>
+
+    </group>
+
+
+</menu>

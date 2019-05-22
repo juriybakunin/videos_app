@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <com.jbak.videos.view.VideoSeek
+            android:id="@+id/mVideoSeek"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+
+    />
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/mPlayerButtons"
+            android:layout_above="@+id/mVideoSeek"
+            android:padding="4dp"
+            >
+
+        <com.jbak.videos.view.ItemView
+                android:id="@+id/mPrevious"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:itemType="PREVIOUS"
+                android:layout_alignParentBottom="true"
+                android:layout_marginLeft="4dp"
+
+        />
+        <LinearLayout
+                android:id="@+id/mCenterButtons"
+                android:layout_width="0dp"
+                      android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                      android:gravity="center"
+                    android:layout_weight="1">
+
+            <ImageView
+                    android:id="@+id/mCtrlPause"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_centerInParent="true"
+                    android:src="@android:drawable/ic_media_pause"
+            />
+        </LinearLayout>
+
+        <com.jbak.videos.view.ItemView
+                android:id="@+id/next"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:itemType="NEXT"
+
+        />
+    </LinearLayout>
+
+    <TextView
+            android:id="@+id/relativeTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/related"
+            android:textSize="12sp"
+            style="@style/shadowed_text"/>
+
+    <com.jbak.videos.view.ItemListView
+            android:layout_below="@+id/relativeTitle"
+            android:id="@+id/mListView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    <TextView
+            android:layout_below="@+id/mListView"
+            android:id="@+id/mVideoTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textSize="20sp"
+            android:padding="10dp"
+            style="@style/shadowed_text"/>
+
+</RelativeLayout>
