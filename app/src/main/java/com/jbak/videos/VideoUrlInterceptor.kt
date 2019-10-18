@@ -4,11 +4,14 @@ import android.net.Uri
 import android.os.Looper
 import android.webkit.*
 import com.jbak.videos.types.IItem
+import com.jbak.videos.types.SerialList
 import kotlinx.android.synthetic.main.controller_layout.*
+import okhttp3.Response
 import tenet.lib.base.MyLog
 import tenet.lib.base.utils.Utils
 import java.io.ByteArrayInputStream
 import java.io.IOException
+import java.lang.Exception
 
 
 class VideoUrlInterceptor (controllerDialog : ControllerDialog){
@@ -116,9 +119,7 @@ class VideoUrlInterceptor (controllerDialog : ControllerDialog){
     fun loadUrlItem(item : IItem.IResourceIntercept) {
         mPlayItem = item;
         mWebView.settings.cacheMode = WebSettings.LOAD_NO_CACHE
-        val agent = item.userAgent
-        mWebView.settings.userAgentString = if(agent == null) defaultUserAgent else agent
-        loadUrl(item.startUrl)
+        item.onWebViewEvent(IItem.LOAD_EVENT_START,"",this)
     }
 
     fun cancel(){
@@ -142,6 +143,17 @@ class VideoUrlInterceptor (controllerDialog : ControllerDialog){
         }
     }
 
+    fun videoLoadError(response: Response?, e: Exception?) {
+        var err = App.str(R.string.err_load_url)
+        if(e != null){
+            err = "$err: ${e.toString()}"
+        } else if(response != null) {
+            err = "$err: ${response.code()} ${response.message()}"
+        }
+        videoLoadError(err)
+
+    }
+
     fun videoLoadError(error: String) {
         if(Utils.isUIThread()) {
             loadEmpty()
@@ -149,6 +161,10 @@ class VideoUrlInterceptor (controllerDialog : ControllerDialog){
         } else {
             mWebView.post({videoLoadError(error)})
         }
+    }
+
+    fun setSerial(serial: SerialList) {
+        controllerDialog.setSerial(serial)
     }
 
 }

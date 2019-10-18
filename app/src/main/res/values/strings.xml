@@ -30,4 +30,7 @@
     <string name="quality_high">Высокое качество</string>
     <string name="set_quality">Предпочтительное качество</string>
     <string name="buffering">Буфферизация</string>
+    <string name="kinokrad_provider">Kinokrad</string>
+    <string name="season">Сезон</string>
+    <string name="err_load_url">Ошибка загрузки ссылки</string>
 </resources>

@@ -43,6 +43,7 @@ class Factory {
         YOTUBE(1, R.string.youtube_provider),
         RUTUBE(2, R.string.rutube_provider),
         HDREZKA(3, R.string.hdrezka_provider),
+        KINOKRAD(4, R.string.kinokrad_provider),
         NONE(100000, R.string.none);
         val mId:String
 
@@ -90,13 +91,15 @@ class Factory {
             if (iItem is Type) {
                 return iItem
             }
-             if(iItem is HDRezkaItem) {
+            if(iItem is KinokradItem) {
+                return Type.KINOKRAD
+            } else if(iItem is HDRezkaItem) {
                  return Type.HDREZKA
-             } else if(iItem is YouTubeItem) {
+            } else if(iItem is YouTubeItem) {
                  return Type.YOTUBE
-             } else if(iItem is RutubeVideo) {
+            } else if(iItem is RutubeVideo) {
                  return Type.RUTUBE
-             }
+            }
             return Type.NONE
         }
 
@@ -118,6 +121,7 @@ class Factory {
                 Type.YOTUBE -> YouTube()
                 Type.RUTUBE -> RuTube()
                 Type.HDREZKA -> HdRezka()
+                Type.KINOKRAD -> Kinokrad()
                 Type.NONE -> throw IllegalArgumentException("Can't create provider none ")
             }
         }

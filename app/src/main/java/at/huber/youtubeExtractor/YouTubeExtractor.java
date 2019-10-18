@@ -792,6 +792,7 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
 
         public SyncExtractor(@NonNull Context con) {
             super(con);
+            LOGGING = true;
         }
 
         @Override

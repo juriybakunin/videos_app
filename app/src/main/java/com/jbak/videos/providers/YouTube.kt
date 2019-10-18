@@ -45,14 +45,13 @@ class MediaInfo : Interfaces.IdNamed{
 
 class YouTubeItem : VideoItem(),
     IItem.INextUrl,
-    IItem.IUrlItem,
     IItem.IVideoUrlLoader
 {
     var ytFiles : ArrayList<YtFile>? = null
     override fun loadVideoUrlSync(): String? {
         val url = pageUrl
         ytFiles?.clear()
-        val files = YouTubeExtractor.SyncExtractor(App.get()).extractSync(url,false,false)
+        val files = YouTubeExtractor.SyncExtractor(App.get()).extractSync(url,true,true)
         if (files != null && !files.isEmpty()){
             if(ytFiles == null)
                 ytFiles = ArrayList()
@@ -74,65 +73,6 @@ class YouTubeItem : VideoItem(),
 
     val pageUrl:String
         get() = "http://www.youtube.com/watch?v=" + getId()
-//    override fun getUserAgent(): String? {
-//        return USER_AGENT;
-//    }
-
-//    override fun loadVideoUrlSync(): String? {
-//        val url = INFO_URL.replace("[ID]", URLEncoder.encode(id));
-//        MyLog.log("Info url: "+url);
-//        val dinfo = YouTubeFormats.TEST_HOST+NetUtils.loadUrl(url);
-//        mediaUrls = YouTubeFormats.MediaUrls().fromData(dinfo);
-//        if(mediaUrls != null && mediaUrls!!.size > 0){
-//            MyLog.log("MEDIA FORMATS:")
-//            for (mf in mediaUrls!!){
-//               MyLog.log(mf.toString())
-//            }
-//            return mediaUrls!![0].url;
-//        }
-//        return null
-//    }
-//    var mediaUrls : YouTubeFormats.MediaUrls? = null
-//override fun getNextUrl(url: String?): String? {
-//    if(url == null || mediaUrls == null)
-//        return null
-//    val next = Utils.getNextPreviousItem(true,url,mediaUrls,false)
-//    return if(next == null) null else next.url
-//}
-
-    override fun getStartUrl(): String {
-        return "http://www.youtube.com/watch?v=" + getId() +"&autoplay=1";
-    }
-
-
-    fun checkMedia(uri: Uri) : Boolean {
-//        if(mediaData == null) {
-//            mediaData = MediaData()
-//        }
-        val itagStr = uri.getQueryParameter("itag")
-        var itag = 0
-        if(itagStr != null)
-            itag = Integer.decode(itagStr)
-        val fmt = YouTubeFormats.TABLE.get(itag)
-        if(fmt != null) {
-            return fmt.hasVideo() && fmt.hasAudio()
-        }
-//        val md = MediaInfo(itag, uri.toString())
-//        if(audio) {
-//            mediaData!!.audioList.add(md)
-//        } else {
-//            mediaData!!.videosList.add(md)
-//        }
-        return false
-    }
-
-//    var mediaData : MediaData? = null
-//    fun getFirstUrl(): String? {
-//        if(mediaData != null && mediaData!!.videosList.size > 0) {
-//            return mediaData!!.videosList[0].url;
-//        }
-//        return null;
-//    }
 
     override fun getNextUrl(url: String?): String? {
         if(ytFiles != null && ytFiles!!.size > 0){
@@ -140,35 +80,6 @@ class YouTubeItem : VideoItem(),
         }
         return null;
     }
-
-//    override fun interceptResource(resUri: Uri, request: WebResourceRequest?, interceptor: VideoUrlInterceptor): Int {
-//        if(resUri.host.endsWith("googlevideo.com") &&
-//            resUri.lastPathSegment != null &&
-//            resUri.lastPathSegment!!.equals("videoplayback")) {
-//
-//            val mime = resUri.getQueryParameter("mime");
-//            MyLog.log("Mime: $mime, itag: ${resUri.getQueryParameter("itag")} file: ${resUri.lastPathSegment}")
-//            if(mime == null) {
-//                return IItem.BLOCK_ONCE
-//            }
-//            if(checkMedia(resUri)) {
-//                val audio = mime.startsWith("audio")
-//                val builder = resUri.buildUpon().clearQuery();
-//                for (key in resUri.queryParameterNames) {
-//                    val param = resUri.getQueryParameter(key);
-//                    if (!key.equals("range") && !TextUtils.isEmpty(param)) {
-//                        builder.appendQueryParameter(key, param)
-//                    }
-//                }
-//                val uri = builder.build();
-//                interceptor.videoUrlLoaded(uri.toString());
-//                return IItem.STOP_LOAD
-//            }
-//
-//            return IItem.BLOCK_ONCE
-//        }
-//        return IItem.CONTINUE
-//    }
 
 }
 

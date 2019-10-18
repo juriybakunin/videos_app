@@ -28,7 +28,9 @@ class App : TenetApp() {
         var PLAYER: IPlayer? = null
             set(value) {
                 field = value
-                PlayerReceiver.registerNoisyReceiver(value != null)
+                PlayerReceiver.registerAudioReceivers(value != null)
+//                if(value!=null)
+//                    PlayerReceiver.createMediaSession()
             }
         fun dpToPx(dp: Int): Int {
             val density = res().displayMetrics.density

@@ -14,6 +14,7 @@
             android:theme="@style/AppTheme" tools:ignore="GoogleAppIndexingWarning,UnusedAttribute">
         <activity android:name="com.jbak.videos.activity.MainActivity"
                   android:screenOrientation="fullUser"
+                  android:launchMode="singleTask"
             android:configChanges="keyboardHidden|orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -27,6 +28,12 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="@string/act_receiver_next"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="@string/act_receiver_previous"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
     </application>

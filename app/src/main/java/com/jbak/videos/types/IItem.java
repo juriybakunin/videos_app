@@ -58,7 +58,6 @@ public interface IItem extends Interfaces.IdNamed {
 
 /** Элемент, содержащий контент в виде ссылки */
     interface IUrlItem extends IItem{
-        String getStartUrl();
     }
 
 
@@ -71,7 +70,6 @@ public interface IItem extends Interfaces.IdNamed {
 /** Элемент, умеющий доставать ссылку из вебстраницы, которая загружается по адресу getStartUrl()*/
     interface IResourceIntercept extends IUrlItem {
 
-        @Nullable String getUserAgent();
         void onWebViewEvent(int event, String url, VideoUrlInterceptor interceptor);
         int interceptResource(@NonNull Uri resUri, WebResourceRequest request, VideoUrlInterceptor interceptor);
     }

@@ -153,6 +153,7 @@ class ControllerDialog(
 
     override fun onBackPressed() {
         PlaybackService.stop()
+        App.PLAYER = null
         iPlayback.clear()
         dlgHandler.onClose()
         cancelDownload()
@@ -163,6 +164,7 @@ class ControllerDialog(
     }
 
     override fun show() {
+        App.PLAYER = this
         isHidden = false
         iPlayback.setMargins(mMargins)
         super.show()
@@ -476,14 +478,24 @@ class ControllerDialog(
                 if(startOnResume) {
                     iPlayback.play()
                 }
+                PlaybackService.stop()
                 startOnResume = false
                 activityPaused = false
             }
 
             ACTIVITY_EVENT_DESTROY->{
                 iPlayback.clear()
-                App.PLAYER = null
                 PlaybackService.stop()
+            }
+        }
+    }
+
+    fun setSerial(serial: SerialList) {
+        if(Utils.isUIThread()){
+            mPlaylistView.mSerialView.setSerialList(serial)
+        } else {
+            mWebView.post {
+                setSerial(serial)
             }
         }
     }

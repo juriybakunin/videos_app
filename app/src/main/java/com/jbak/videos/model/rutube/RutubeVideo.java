@@ -70,18 +70,6 @@ public class RutubeVideo implements IItem.IUrlItem, IItem.IVideoUrlLoader {
         return id;
     }
 
-    @NotNull
-    @Override
-    public String getStartUrl() {
-        if(TextUtils.isEmpty(embed_url))
-            return "";
-        String as = "autoStart=true";
-        if(embed_url.indexOf('?') > 0)
-            return embed_url + "&"+as;
-        return embed_url+"?"+as;
-    }
-
-
 
     @Override
     public String loadVideoUrlSync() throws Throwable {

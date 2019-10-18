@@ -5,10 +5,7 @@ import android.webkit.WebResourceRequest
 import com.jbak.hasInPath
 import com.jbak.isExtension
 import com.jbak.isFilename
-import com.jbak.videos.DataLoader
-import com.jbak.videos.SerialLoader
-import com.jbak.videos.VideoUrlInterceptor
-import com.jbak.videos.Web
+import com.jbak.videos.*
 import com.jbak.videos.types.*
 import com.jbak.videos.types.IItem.*
 import okhttp3.Call
@@ -22,13 +19,8 @@ import tenet.lib.base.MyLog
 import tenet.lib.base.utils.Utils
 import java.io.IOException
 
-class HDRezkaItem : VideoItem(), IItem.IUrlItem, IItem.IResourceIntercept {
+open class HDRezkaItem : VideoItem(), IItem.IResourceIntercept {
 
-//    var playerUrl : String? = null
-
-    override fun getUserAgent(): String? {
-        return null
-    }
 
     fun loadWebResource(resUri: Uri, resource: WebResourceRequest, onLoad: Web.Loader){
         val url = resUri.toString()
@@ -57,7 +49,7 @@ class HDRezkaItem : VideoItem(), IItem.IUrlItem, IItem.IResourceIntercept {
         return false
     }
 
-    fun processVideoUri(resUri: Uri, resource: WebResourceRequest, webPlayer: VideoUrlInterceptor) : Int{
+    open fun processVideoUri(resUri: Uri, resource: WebResourceRequest, webPlayer: VideoUrlInterceptor) : Int{
         if("streamguard.cc".equals(resUri.host)&&
             resUri.isFilename("iframe")) {
             val onLoad = object : Web.Loader() {
@@ -66,6 +58,8 @@ class HDRezkaItem : VideoItem(), IItem.IUrlItem, IItem.IResourceIntercept {
                         var playerUrl = response.request().url().toString()
                         playerUrl = playerUrl + "&autoplay=1"
                         webPlayer.loadUrl(playerUrl, true)
+                    } else {
+                        webPlayer.videoLoadError(response, e)
                     }
                 }
             }
@@ -84,7 +78,11 @@ class HDRezkaItem : VideoItem(), IItem.IUrlItem, IItem.IResourceIntercept {
         return CONTINUE
     }
 
-    override fun onWebViewEvent(event: Int, url: String?, interceptor: VideoUrlInterceptor?) {
+    override fun onWebViewEvent(event: Int, url: String?, interceptor: VideoUrlInterceptor) {
+        when(event) {
+            LOAD_EVENT_START -> interceptor.loadUrl(id)
+
+        }
     }
 
     override fun interceptResource(resUri: Uri, resource: WebResourceRequest, interceptor: VideoUrlInterceptor): Int {
@@ -109,12 +107,6 @@ class HDRezkaItem : VideoItem(), IItem.IUrlItem, IItem.IResourceIntercept {
             return STOP_LOAD
         }
         return CONTINUE;
-    }
-
-    override fun getStartUrl(): String {
-//        if(!TextUtils.isEmpty(playerUrl))
-//            return playerUrl!!
-        return id
     }
 
 }
