@@ -1,17 +1,18 @@
 package com.jbak.videos.types
 
 import android.text.TextUtils
+import com.jbak.videos.providers.HDRezkaItem
 import tenet.lib.base.utils.Utils
 
 
-class VideosList : ArrayList<IItem>, IItem.IItemList {
-
-    constructor() : super(){
-        reset()
-    }
+open class VideosList() : ArrayList<IItem>(), IItem.IItemList {
 
     companion object {
         val FIRST_PAGE = "FIRSTPAGETOKEN";
+    }
+
+    init {
+        reset()
     }
 
     var nextPageToken:String? = "FIRSTPAGETOKEN"
@@ -52,6 +53,81 @@ class VideosList : ArrayList<IItem>, IItem.IItemList {
             return false
         add(iItem)
         return true
+    }
+
+
+}
+
+open class Season(name:String, id:String) : VideosList(),IItem {
+    var name : String = ""
+    var mId = IItem.ID
+    init {
+        this.mId = id
+        this.name = name
+    }
+
+    override fun getImageUrl(): String {
+        return ""
+    }
+
+    override fun getName(): CharSequence {
+        return name
+    }
+
+    override fun getId(): String {
+        return mId
+    }
+
+    override fun getShortDescText(): String? {
+        return ""
+    }
+
+}
+open class SerialList() : VideosList() {
+    lateinit var parentItem : IItem
+
+    fun getNextPreviousSeries(iItem: IItem, next: Boolean) : IItem? {
+        var item = iItem
+        var season:Season? = null
+        if(item.equals(parentItem) && size > 0){
+            season = get(0) as? Season
+            if(season != null) {
+                item = season[0]
+            }
+        }
+        if(season == null)
+            season = getSeason(item)
+        if (season == null) {
+            return null
+        }
+        var nextItem:IItem? = Utils.getNextPreviousItem(next,item.id,season,false)
+        if(nextItem == null) {
+            season = getNextSeason(next, season)
+            if(season != null) {
+                nextItem = if(next) season.firstOrNull() else season.lastOrNull()
+            }
+        }
+        return nextItem
+    }
+
+    fun hasItem(item:IItem) : Boolean {
+        return parentItem.equals(item) || getSeason(item) != null
+    }
+
+    fun getNextSeason(next: Boolean, season: Season) : Season? {
+        return Utils.getNextPreviousItem(next,season.id,this,false) as? Season
+    }
+
+    fun getSeason(item:IItem) : Season? {
+        for (s in this){
+            val season = s as? Season
+            if(season != null){
+                val serie = Utils.itemById(item.id, season)
+                if(serie != null)
+                    return season;
+            }
+        }
+        return null
     }
 
 }

@@ -8,7 +8,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "com.jbak.videos"
-        minSdkVersion 17
+        minSdkVersion 21
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -28,6 +28,10 @@ android {
     }
     lintOptions {
         checkReleaseBuilds false
+    }
+    compileOptions {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
     }
 }
 
@@ -60,10 +64,13 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.0.0'
     implementation 'com.github.bumptech.glide:glide:4.7.1'
-    implementation 'androidx.appcompat:appcompat:1.0.2'
+    implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.recyclerview:recyclerview:1.0.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'org.jsoup:jsoup:1.8.3'
+    implementation('com.github.evgenyneu:js-evaluator-for-android:v4.0.0') {
+        exclude module: 'appcompat-v7'
+    }
 
 
 }

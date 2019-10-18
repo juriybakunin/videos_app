@@ -3,12 +3,15 @@ package com.jbak.videos.model.rutube;
 
 import android.net.Uri;
 import android.text.TextUtils;
+import android.webkit.WebResourceRequest;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.google.gson.Gson;
-import com.jbak.videos.Const;
 import com.jbak.videos.types.IItem;
 import org.jetbrains.annotations.NotNull;
 import tenet.lib.base.MyLog;
 import tenet.lib.base.utils.NetUtils;
+import tenet.lib.base.utils.TimeUtils;
 
 import java.util.List;
 
@@ -53,8 +56,8 @@ public class RutubeVideo implements IItem.IUrlItem, IItem.IVideoUrlLoader {
     }
 
     @Override
-    public int getDuration() {
-        return duration;
+    public String getShortDescText() {
+        return duration>0? TimeUtils.getTimeRangeText(duration, true, null).toString() : "";
     }
 
     @Override
@@ -69,7 +72,7 @@ public class RutubeVideo implements IItem.IUrlItem, IItem.IVideoUrlLoader {
 
     @NotNull
     @Override
-    public String getVideoUrl() {
+    public String getStartUrl() {
         if(TextUtils.isEmpty(embed_url))
             return "";
         String as = "autoStart=true";
@@ -77,6 +80,7 @@ public class RutubeVideo implements IItem.IUrlItem, IItem.IVideoUrlLoader {
             return embed_url + "&"+as;
         return embed_url+"?"+as;
     }
+
 
 
     @Override

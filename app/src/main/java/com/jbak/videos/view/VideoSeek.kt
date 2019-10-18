@@ -8,7 +8,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.SeekBar
 import androidx.constraintlayout.widget.ConstraintLayout
-import com.jbak.videos.IPlayback
+import com.jbak.videos.playback.IPlayback
 import com.jbak.videos.R
 import kotlinx.android.synthetic.main.seek_bar_layout.view.*
 import tenet.lib.base.utils.TimeUtils

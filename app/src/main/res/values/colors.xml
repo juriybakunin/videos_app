@@ -6,4 +6,6 @@
     <color name="textColor">#FFFFFF</color>
     <color name="searchTitleTextColor">#7e7e7e</color>
     <color name="transparentBack">#88000000</color>
+    <color name="orange">#f4a142</color>
+    <color name="blue">#006ee8</color>
 </resources>

@@ -7,7 +7,7 @@ import android.text.TextUtils
 import com.jbak.lib.data.DbUtils
 import com.jbak.lib.data.DbUtils.StrConst.*
 import com.jbak.videos.types.IItem
-import com.jbak.videos.types.SimpleItem
+import com.jbak.videos.types.VideoItem
 import tenet.lib.base.MyLog
 
 private const val DB_VERSION = 1
@@ -36,7 +36,7 @@ class Db : SQLiteOpenHelper (App.get(), DB_FILENAME,null, DB_VERSION), DbUtils.S
         }
 
         override fun getItem(pos: Int): IItem {
-            val item = SimpleItem()
+            val item = VideoItem()
             cursor?.let {
                 it.moveToPosition(pos)
                 val id = it.getLong(it.getColumnIndex(_ID)).toString()

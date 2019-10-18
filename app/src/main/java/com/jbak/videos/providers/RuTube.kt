@@ -1,8 +1,10 @@
 package com.jbak.videos.providers
 
 import com.jbak.videos.DataLoader
+import com.jbak.videos.SerialLoader
 import com.jbak.videos.types.VideosList
 import com.jbak.videos.model.rutube.RutubeSearchResult
+import com.jbak.videos.types.IItem
 import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -10,7 +12,7 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 import tenet.lib.base.Err
 
-class RuTube : Factory.VideoProvider{
+class RuTube : Factory.BaseVideoProvider(){
 
     override fun getType(): Factory.Type {
         return Factory.Type.RUTUBE
@@ -40,7 +42,7 @@ class RuTube : Factory.VideoProvider{
 
                 videos.body()?.let {
                     videosList.addAll(it.results)
-                    val pagInt = page!!.toInt() + 1
+                    val pagInt = page.toInt() + 1
                     if(pagInt < it.num_pages)
                         videosList.nextPageToken =  pagInt.toString()
                     else
@@ -64,6 +66,13 @@ class RuTube : Factory.VideoProvider{
             fun searchVideos(@Query("query") query: String, @Query("page") page: String) : Call<RutubeSearchResult>
         }
 
+    }
+
+    override fun createSerialLoader(
+        iItem: IItem,
+        onItemsLoaded: DataLoader.OnItemsLoaded
+    ): SerialLoader? {
+        return null
     }
 
 }

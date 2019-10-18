@@ -1,14 +1,22 @@
 package com.jbak.videos
 
+import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.res.Resources
+import android.media.AudioManager
+import com.jbak.videos.playback.PlayerReceiver
+import com.jbak.videos.playback.IPlayer
 import tenet.lib.base.MyLog
 import tenet.lib.base.TenetApp
 
 class App : TenetApp() {
     private lateinit var prefs: Prefs
+    lateinit var audioManager: AudioManager
+    var audioSession: Int = 0
     override fun onCreate() {
         INST = this
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        audioSession = audioManager.generateAudioSessionId()
         super.onCreate()
         MyLog.setDefTag("Videos")
         prefs = Prefs(getSharedPreferences("prefs",0));
@@ -16,9 +24,12 @@ class App : TenetApp() {
 
 
 
-
     companion object {
-
+        var PLAYER: IPlayer? = null
+            set(value) {
+                field = value
+                PlayerReceiver.registerNoisyReceiver(value != null)
+            }
         fun dpToPx(dp: Int): Int {
             val density = res().displayMetrics.density
             return Math.round(dp.toFloat() * density)

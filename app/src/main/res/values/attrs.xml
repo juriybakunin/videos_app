@@ -7,6 +7,7 @@
             <enum name="PREVIOUS" value="2"/>
             <enum name="NEXT" value="3"/>
             <enum name="SEARCH" value="4"/>
+            <enum name="TEXT" value="5"/>
         </attr>
     </declare-styleable>
 </resources>

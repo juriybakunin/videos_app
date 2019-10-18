@@ -2,6 +2,7 @@ package tenet.lib.base.utils;
 
 import android.graphics.Typeface;
 import android.os.Build;
+import android.os.Looper;
 import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -23,6 +24,11 @@ import tenet.lib.base.MyLog;
 import tenet.lib.base.TenetApp;
 
 public class Utils {
+
+
+    public static boolean isUIThread(){
+        return Looper.myLooper() == Looper.getMainLooper();
+    }
 
     /** Преобразует значение в dp в пиксели */
     public static int dpToPx(int dp) {
@@ -75,12 +81,15 @@ public class Utils {
     }
 
     public static <T extends Interfaces.IdNamed> T getNextPreviousItem(boolean next, String id, List<T> list) {
+        return getNextPreviousItem(next,id,list,true);
+    }
+    public static <T extends Interfaces.IdNamed> T getNextPreviousItem(boolean next, String id, List<T> list, boolean circleMove) {
         if(list == null)
             return null;
         int curIndex = indexById(id,list);
         if(curIndex < 0)
             return null;
-        int index = getNextPreviousIndex(next, curIndex, list.size());
+        int index = getNextPreviousIndex(next, curIndex, list.size(),circleMove);
         return index < 0? null : list.get(index);
     }
 
@@ -93,6 +102,7 @@ public class Utils {
         try {
             return Integer.decode(s);
         } catch (Throwable e){
+            MyLog.log("Bad duration:"+s);
             MyLog.err(e);
         }
         return defVal;
@@ -265,6 +275,14 @@ public class Utils {
     }
 
     public static <T extends Interfaces.IdNamed> T itemById(String id,Iterable<T> items){
+        for (T item:items){
+            if(id.equals(item.getId()))
+                return item;
+        }
+        return null;
+    }
+
+    public static <T extends Interfaces.IdNamed> T itemById(String id,T[] items){
         for (T item:items){
             if(id.equals(item.getId()))
                 return item;

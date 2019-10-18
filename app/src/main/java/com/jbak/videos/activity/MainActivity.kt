@@ -2,21 +2,26 @@ package com.jbak.videos.activity
 
 import android.content.DialogInterface
 import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Bundle
 import android.text.TextUtils
-import android.view.*
-import android.widget.Toast
+import android.view.KeyEvent
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
-import androidx.core.view.GravityCompat
-import com.google.android.material.navigation.NavigationView
+import com.jbak.setTrueFullscreen
 import com.jbak.videos.*
+import com.jbak.videos.playback.PlaybackService
 import com.jbak.videos.providers.Factory
 import com.jbak.videos.types.IItem
 import com.jbak.videos.types.VideosList
 import com.jbak.videos.view.CustomSearchView
+import com.jbak.videos.view.ItemDesign
 import com.jbak.videos.view.ItemListView
+import com.jbak.videos.view.TechMenu
 import kotlinx.android.synthetic.main.activity_main.*
 import tenet.lib.base.Err
 import tenet.lib.base.MyLog
@@ -37,12 +42,11 @@ class MainActivity : AppCompatActivity(),
     var mSearchView:CustomSearchView? = null;
     var queryText : String = "";
     lateinit var controllerDlg : ControllerDialog
-    var isPlayerShown = false
     private val mCompleteLoader = Web.createCompleteLoader(object : DataLoader.OnItemsLoaded{
         override fun onItemsLoaded(err: Err, videosList: VideosList) {
             MyLog.log(err.toString())
             if(err.isOk && mListMenu.visibility == View.VISIBLE){
-                mListMenu.getItemAdapter().setList(videosList)
+                mListMenu.itemAdapter.setList(videosList)
             }
         }
 
@@ -71,49 +75,74 @@ class MainActivity : AppCompatActivity(),
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(customToolbar)
-        supportActionBar?.run {
-            setDisplayHomeAsUpEnabled(true)
-            setHomeAsUpIndicator(R.drawable.ic_menu)
-        }
-        mVideoPlayer.visibility = View.INVISIBLE
-        mYouTubePlayer.visibility = View.INVISIBLE
-        mWebPlayer.visibility = View.INVISIBLE
         itemList.onItemClick = this
-        mNavView.setNavigationItemSelectedListener(object : NavigationView.OnNavigationItemSelectedListener{
-            override fun onNavigationItemSelected(item: MenuItem): Boolean {
-                when(item.itemId){
-                    R.id.youtube_provider -> changeProviderType(Factory.Type.YOTUBE)
-                    R.id.rutube_provider->changeProviderType(Factory.Type.RUTUBE)
-                    R.id.hdrezka_provider->changeProviderType(Factory.Type.HDREZKA)
-                    else -> Toast.makeText(this@MainActivity,"Not implemented",Toast.LENGTH_SHORT).show()
-                }
-                mDrawerLayout.closeDrawer(GravityCompat.START)
-                return true
-            }
-
-        })
-        mProvider = Factory.createProvider(App.prefs().getProviderType())
+        mProvider = Factory.getProvider(App.prefs().getProviderType())
+        createProvidersPanel()
         dataLoader = mProvider.createSearchLoader(this)
-        if(Const.USE_CONTROLLER_DLG) {
-            controllerDlg = ControllerDialog(this)
-            mYouTubePlayer.controllerDialog = controllerDlg
+        controllerDlg = ControllerDialog(this, mProvider)
+        controllerDlg.setOnCancelListener {
+            mListMenu.postDelayed({
+                window.setTrueFullscreen(false)
+            },100L)
         }
+        App.PLAYER = controllerDlg
         setLoadData(false)
     }
+
+    override fun onPause() {
+        controllerDlg.onActivityEvent(ACTIVITY_EVENT_PAUSE)
+        super.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        controllerDlg.onActivityEvent(ACTIVITY_EVENT_RESUME)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        controllerDlg.onActivityEvent(ACTIVITY_EVENT_DESTROY)
+    }
+
+    private fun createProvidersPanel() {
+        val providers = IItem.ItemList();
+        var id : String? = null
+        for (t in Factory.Type.values()) {
+            if(t == Factory.Type.NONE)
+                break
+            if(mProvider.getType() == t)
+                id = t.id;
+            providers.add(t)
+        }
+        val des = ItemDesign()
+            .set(ItemDesign.TEXT_COLOR,Color.WHITE)
+            .set(ItemDesign.TEXT_COLOR_CURRENT,Color.WHITE)
+            .set(ItemDesign.TEXT_BACK_COLOR, App.res().getColor(R.color.colorPrimaryDark))
+            .set(ItemDesign.TEXT_BACK_COLOR_CURRENT, App.res().getColor(R.color.colorPrimary))
+            .set(ItemDesign.TEXT_SHADOW,0)
+        providerList.setBackgroundColor(App.res().getColor(R.color.colorPrimary))
+        providerList.setDesign(des)
+        providerList.setItems(providers, id, true)
+        providerList.onItemClick = object : ItemListView.OnItemClick {
+            override fun onItemClick(iItem: IItem, view: View) {
+                changeProviderType(Factory.getItemType(iItem))
+            }
+        }
+
+    }
+
 
     fun makeTitle(query : String?){
 
         var title = App.str(R.string.app_name)
         if(!TextUtils.isEmpty(query))
-            title = mProvider.getType().getName() +": "+query
+            title = query!!
         setTitle(title)
+        supportActionBar!!.subtitle = mProvider.getType().getName()
     }
 
-    fun setError(error : String = App.str(R.string.err_general)){
-        MyLog.log("Error: "+error)
-        errorText.text = error
-        errorText.visibility = View.VISIBLE
-    }
+
+
 
     override fun onQueryTextChange(newText: String?): Boolean {
         if(mListMenu.visibility == View.VISIBLE) {
@@ -165,6 +194,7 @@ class MainActivity : AppCompatActivity(),
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        controllerDlg.onConfigurationChanged(newConfig)
     }
 
 
@@ -187,19 +217,55 @@ class MainActivity : AppCompatActivity(),
     fun changeProviderType(factoryType : Factory.Type){
         queryText = ""
         App.prefs().setProviderType(factoryType)
-        mProvider = Factory.createProvider(factoryType)
+        providerList.setCurrent(factoryType.id)
+        mProvider = Factory.getProvider(factoryType)
         startInitialSearch()
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when(item.itemId){
-            R.id.youtube_provider ->{changeProviderType(Factory.Type.YOTUBE); return true}
-            R.id.rutube_provider ->{changeProviderType(Factory.Type.RUTUBE); return true}
-            R.id.hdrezka_provider ->{changeProviderType(Factory.Type.HDREZKA); return true}
-            R.id.search_history -> {showSearchHistory(); return true}
-            android.R.id.home -> {mDrawerLayout.openDrawer(GravityCompat.START); return true}
-            else -> return super.onOptionsItemSelected(item)
+    fun onCommand(command:Int) : Boolean{
+        when(command){
+            R.id.search_history -> showSearchHistory()
+            R.id.select_provider -> showProvidersMenu()
+            R.id.tech_menu -> TechMenu().showMain(this)
+            R.id.refresh -> changeProviderType(mProvider.getType())
+            R.id.settings -> showSettings()
+            else -> {
+                return false
+            }
         }
+        return true
+    }
+
+        private fun showSettings() {
+            val set = IItem.ItemList();
+            SettingDlg().setGeneral().show(this)
+        }
+
+        private fun showProvidersMenu() {
+        val list = ArrayList<String>()
+        for (t in Factory.Type.values()) {
+            if(t != Factory.Type.NONE)
+                list.add(t.getName())
+        }
+        val array = list.toArray(arrayOfNulls<String>(list.size))
+        AlertDialog.Builder(this)
+            .setItems(array, object: DialogInterface.OnClickListener{
+                override fun onClick(dialog: DialogInterface?, which: Int) {
+                    if(which < 0)
+                        return
+                    changeProviderType(Factory.Type.values()[which])
+                }
+            })
+            .setTitle(R.string.select_provider)
+            .setIcon(R.drawable.ic_search_provider)
+            .show()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        closeListMenu()
+        if(onCommand(item.itemId))
+            return true
+        return super.onOptionsItemSelected(item)
     }
 
     private fun closeListMenu () : Boolean{
@@ -230,7 +296,7 @@ class MainActivity : AppCompatActivity(),
     override fun onItemsLoaded(err: Err, videosList: VideosList) {
         setLoadData(false)
         if(err.isOk) {
-            itemList.getItemAdapter().setList(videosList)
+            itemList.itemAdapter.setList(videosList)
         }
         MyLog.log("Loaded")
     }
@@ -239,59 +305,16 @@ class MainActivity : AppCompatActivity(),
         if(closeListMenu()){
             return
         }
-
-        if(isPlayerShown) {
-            closePlayer()
-            return
-        }
-
-        if(Const.USE_CONTROLLER_DLG)
-            controllerDlg.iPlayback = null
         super.onBackPressed()
     }
 
+
     override fun onItemClick(iItem: IItem, view: View) {
-        isPlayerShown = true
-        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        controllerDlg.playItem(iItem, itemList.itemAdapter.items)
 
-        if(mProvider.getType() == Factory.Type.YOTUBE) {
-            mYouTubePlayer.visibility = View.VISIBLE
-            mYouTubePlayer.playItem(iItem, itemList.getItemAdapter().items)
-            if (Const.USE_CONTROLLER_DLG) {
-                controllerDlg.setOnCancelListener(object : DialogInterface.OnCancelListener {
-                    override fun onCancel(dialog: DialogInterface?) {
-                        closePlayer()
-                    }
-                })
-            }
-        } else if(iItem is IItem.IVideoUrlLoader){
-            mVideoPlayer.visibility = View.VISIBLE
-            mVideoPlayer.playVideo(iItem)
-        } else if(iItem is IItem.IUrlItem) {
-            mWebPlayer.visibility = View.VISIBLE
-            mWebPlayer.playVideo(iItem)
-        }
     }
 
-    fun closePlayer() {
-        if(mYouTubePlayer.visibility == View.VISIBLE){
-            mYouTubePlayer.youTubePlayer?.run {
-                setFullscreen(false)
-                if(isPlaying)
-                    pause()
-            }
-            mYouTubePlayer.visibility = View.INVISIBLE
-        } else if(mWebPlayer.visibility == View.VISIBLE){
-            mWebPlayer.stop()
-            mWebPlayer.visibility = View.INVISIBLE
-        }else if(mVideoPlayer.visibility == View.VISIBLE){
-            mVideoPlayer.stop()
-            mVideoPlayer.visibility = View.INVISIBLE
-        }
-        controllerDlg.hide()
-        window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-        isPlayerShown = false
-    }
+
 
     fun deleteSearchWithDialog(iItem: IItem) {
         AlertDialog.Builder(this)

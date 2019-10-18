@@ -3,7 +3,7 @@ package com.jbak.videos.types
 import com.google.gson.Gson
 import tenet.lib.base.types.BaseIdNamed
 
-open class SimpleItem() : BaseIdNamed<SimpleItem>(), IItem {
+open class VideoItem() : BaseIdNamed<VideoItem>(), IItem {
 
     companion object {
         val GSON = Gson()
@@ -11,9 +11,10 @@ open class SimpleItem() : BaseIdNamed<SimpleItem>(), IItem {
     }
 
     var image : String = ""
-    var dur : Int = 0
+    var dur : String = ""
 
-    override fun getDuration(): Int {
+
+    override fun getShortDescText(): String? {
         return dur
     }
 
@@ -22,7 +23,7 @@ open class SimpleItem() : BaseIdNamed<SimpleItem>(), IItem {
     }
 
 
-    fun setData(id : String, name : String, imageUrl : String, dur : Int) {
+    fun setData(id : String, name : String, imageUrl : String, dur : String) {
         setIdAndName(id,name)
         image = imageUrl
         this.dur = dur
@@ -41,7 +42,7 @@ open class SimpleItem() : BaseIdNamed<SimpleItem>(), IItem {
         id = items[index++]
         name = items[index++]
         image = items[index++]
-        dur = items[index++].toInt()
+        dur = items[index++]
         return index;
     }
 

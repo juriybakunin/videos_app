@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:tools="http://schemas.android.com/tools" package="com.jbak.videos">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <application
             android:name="com.jbak.videos.App"
             android:allowBackup="true"
@@ -19,6 +20,15 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <service android:name=".playback.PlaybackService"/>
+        <receiver android:name=".playback.PlayerReceiver">
+            <intent-filter>
+                <action android:name="@string/act_receiver_play"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="@string/act_receiver_next"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

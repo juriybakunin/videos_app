@@ -1,7 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:app="http://schemas.android.com/apk/res-auto"
-                android:layout_width="match_parent" android:layout_height="match_parent">
+<FrameLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >
+
+<WebView
+        android:id="@+id/mWebView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+<FrameLayout android:layout_width="match_parent"
+             android:layout_height="match_parent"
+            android:id="@+id/mPlayerContainer"
+             android:background="#000000"
+        >
+<com.jbak.videos.view.MediaPlayerView
+        android:id="@+id/mPlayer"
+        android:layout_gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+    <!--<com.jbak.videos.view.VideoPlayerView-->
+            <!--android:id="@+id/mPlayer"-->
+            <!--android:layout_gravity="center"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="match_parent"/>-->
+    <TextView android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:id="@+id/mBufferingText"
+              android:text="@string/buffering"
+              android:layout_gravity="center"
+              android:visibility="invisible"
+              style="@style/shadowed_text"
+              android:textStyle="bold"
+
+        />
+</FrameLayout>
+
+<com.jbak.videos.view.LoadView
+        android:id="@+id/mLoadView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+
+<RelativeLayout android:id="@+id/mPlaybackView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
     <com.jbak.videos.view.VideoSeek
             android:id="@+id/mVideoSeek"
@@ -11,65 +55,61 @@
 
     />
 
-    <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/mPlayerButtons"
-            android:layout_above="@+id/mVideoSeek"
-            android:padding="4dp"
-            >
 
-        <com.jbak.videos.view.ItemView
-                android:id="@+id/mPrevious"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:itemType="PREVIOUS"
-                android:layout_alignParentBottom="true"
-                android:layout_marginLeft="4dp"
-
-        />
         <LinearLayout
                 android:id="@+id/mCenterButtons"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
+                android:layout_above="@+id/mVideoSeek"
                       android:layout_height="wrap_content"
                     android:orientation="horizontal"
                       android:gravity="center"
-                    android:layout_weight="1">
-
+                    >
             <ImageView
-                    android:id="@+id/mCtrlPause"
+                    android:id="@+id/mChangeMargins"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:padding="4dp"
+                    android:background="@drawable/round_back"
+                    android:src="@drawable/ic_margins_no"
+            />
+            <ImageView
+                    android:id="@+id/mPrevious"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/round_back"
+                    android:src="@android:drawable/ic_media_previous"
+            />
+            <ImageView
+                    android:id="@+id/mPlayPause"
                     android:layout_width="60dp"
                     android:layout_height="60dp"
-                    android:layout_centerInParent="true"
-                    android:src="@android:drawable/ic_media_pause"
+                    android:src="@drawable/ic_pause"
+            />
+            <ImageView
+                    android:id="@+id/mNext"
+                    android:layout_width="40dp"
+                       android:layout_height="40dp"
+                    android:background="@drawable/round_back"
+                        android:src="@drawable/ic_next"
+                        />
+            <ImageView
+                    android:id="@+id/mPlayerMenu"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:padding="4dp"
+                    android:background="@drawable/round_back"
+                    android:src="@drawable/ic_menu"
             />
         </LinearLayout>
 
-        <com.jbak.videos.view.ItemView
-                android:id="@+id/next"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:itemType="NEXT"
-
-        />
-    </LinearLayout>
-
-    <TextView
-            android:id="@+id/relativeTitle"
+    <com.jbak.videos.view.PlaylistView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="@string/related"
-            android:textSize="12sp"
-            style="@style/shadowed_text"/>
+            android:id="@+id/mPlaylistView"
+    />
 
-    <com.jbak.videos.view.ItemListView
-            android:layout_below="@+id/relativeTitle"
-            android:id="@+id/mListView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
     <TextView
-            android:layout_below="@+id/mListView"
+            android:layout_below="@+id/mPlaylistView"
             android:id="@+id/mVideoTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -79,3 +119,4 @@
             style="@style/shadowed_text"/>
 
 </RelativeLayout>
+</FrameLayout>

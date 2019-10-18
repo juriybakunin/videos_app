@@ -13,4 +13,21 @@
     <string name="rutube_provider">Ru Tube</string>
     <string name="youtube">You Tube</string>
     <string name="hdrezka_provider">HdRezka</string>
+    <string name="select_provider">Сайт для поиска</string>
+    <string name="refresh">Перезагрузить</string>
+    <string name="playlist">Плейлист</string>
+    <string name="none">NONE</string>
+    <string name="tech_menu">Тестовое меню</string>
+    <string name="player_info">Инфо о видео</string>
+    <string name="set_play_background">Воспроизведение в фоне</string>
+    <string name="settings">Настройки</string>
+
+    <string name="act_receiver_play" translatable="false">ACTION_PLAY</string>
+    <string name="act_receiver_next" translatable="false">ACTION_NEXT</string>
+    <string name="act_receiver_previous" translatable="false">ACTION_PREVIOUS</string>
+    <string name="quality_low">Низкое качество</string>
+    <string name="quality_medium">Среднее качество</string>
+    <string name="quality_high">Высокое качество</string>
+    <string name="set_quality">Предпочтительное качество</string>
+    <string name="buffering">Буфферизация</string>
 </resources>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
+       android:orientation="vertical"
+       tools:parentTag="android.widget.LinearLayout"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:padding="4dp"
+>
+    <com.jbak.videos.view.ItemListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/mListSeasons"
+            app:itemType="TEXT"
+            android:visibility="gone"
+    />
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+                >
+    <com.jbak.videos.view.ItemView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/mCurSeason"
+            app:itemType="TEXT"
+            />
+    <com.jbak.videos.view.ItemListView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:id="@+id/mListSeries"
+            app:itemType="TEXT"
+    />
+
+    </LinearLayout>
+
+
+</merge>

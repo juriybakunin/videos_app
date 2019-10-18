@@ -16,11 +16,13 @@ import com.jbak.videos.R
 import com.jbak.videos.RecyclerUtils
 import com.jbak.videos.types.IItem
 import kotlinx.android.synthetic.main.item_view_search.view.*
+import tenet.lib.base.utils.Utils
+import tenet.lib.base.utils.ViewUtils
 
 
 class ItemListView : RecyclerView {
     private lateinit var gridManager: GridLayoutManager
-    private lateinit var itemAdapter: ItemViewAdapter
+    lateinit var itemAdapter: ItemViewAdapter
     private var type : Type = Type.LIST
     private var pagedScrollListener: RecyclerUtils.PagedScrollListener? = null;
     var onItemClick :OnItemClick? = null
@@ -62,14 +64,17 @@ class ItemListView : RecyclerView {
         setLayout()
     }
 
-    fun getItemAdapter(): ItemViewAdapter {
-        return itemAdapter
-    }
-
     fun endLoad(ok : Boolean, items : IItem.IItemList){
         itemAdapter.stopLoad()
         if(ok) {
             itemAdapter.setList(items)
+        }
+    }
+
+    fun setDesign(itemDesign: ItemDesign?){
+        itemAdapter.itemDesign = itemDesign
+        if(itemAdapter.itemCount > 0){
+            ViewUtils.updateVisibleItems(this)
         }
     }
 
@@ -109,18 +114,35 @@ class ItemListView : RecyclerView {
         setLayout(newConfig)
     }
 
-    fun setItems(items: IItem.IItemList) {
+
+    fun setCurrent(currentId : String?, moveToCurrent: Boolean = false) {
+        itemAdapter.currentItemId = currentId
+        if(currentId != null && moveToCurrent && itemAdapter.items != null){
+            val index = Utils.indexById(currentId,IItem.ItemIterator(itemAdapter.items!!))
+            if(index >= 0)
+                scrollToPosition(index)
+        }
+        ViewUtils.updateVisibleItems(this)
+
+    }
+    fun setItems(items: IItem.IItemList, currentId : String? = null, moveToCurrent: Boolean = false) {
+        itemAdapter.currentItemId = currentId
         itemAdapter.setList(items)
+        if(currentId != null && moveToCurrent){
+            val index = Utils.indexById(currentId,IItem.ItemIterator(items))
+            if(index >= 0)
+                scrollToPosition(index)
+        }
     }
 
     /** Типы элементов, которые отображаются в ItemView */
     enum class Type {
-        LIST, RELATED, PREVIOUS, NEXT, SEARCH;
+        LIST, RELATED, PREVIOUS, NEXT, SEARCH, TEXT, SETTING;
         fun getColumnCount(port: Boolean) : Int{
             return when(this){
                 SEARCH-> if(port) 1 else 2
                 LIST -> if(port) 2 else 3
-                RELATED -> if(port) 2 else 1
+//                RELATED -> if(port) 2 else 1
                 else -> 1
             }
         }
@@ -137,6 +159,8 @@ class ItemListView : RecyclerView {
             return when(this) {
                 LIST -> R.layout.item_view
                 SEARCH -> R.layout.item_view_search
+                TEXT -> R.layout.item_view_text
+                SETTING -> R.layout.item_view_setting
                 else -> R.layout.item_view_related
             }
         }
@@ -144,6 +168,7 @@ class ItemListView : RecyclerView {
         fun getOrientation(port: Boolean) : Int{
             return when(this){
                 RELATED -> HORIZONTAL
+                TEXT -> HORIZONTAL
                 else -> VERTICAL
             }
         }
@@ -199,7 +224,8 @@ class ItemListView : RecyclerView {
         }
 
         class ItemViewAdapter : Adapter<ItemViewHolder>(), OnClickListener {
-
+            var itemDesign: ItemDesign? = null
+            var currentItemId: String? = null
             override fun onClick(v: View) {
                 var itemView : ItemView? = null
                 val image = v.id == R.id.mImage || v.id == R.id.mImage2
@@ -241,8 +267,14 @@ class ItemListView : RecyclerView {
 
             override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
                 val item = items?.getItem(position)
-                if (item != null)
-                    holder.view().setItem(item)
+                if (item != null) {
+                    val cur = item.id.equals(currentItemId)
+                    val iv = holder.view();
+                    iv.setItem(item)
+                    iv.setCurrent(cur)
+                    itemDesign?.apply(iv,cur)
+
+                }
             }
 
             fun setList(list: IItem.IItemList) {

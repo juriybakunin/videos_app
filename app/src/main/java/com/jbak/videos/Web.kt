@@ -1,18 +1,19 @@
 package com.jbak.videos
 
+import android.net.Uri
 import com.jbak.videos.model.GoogleCompletions
-import com.jbak.videos.types.VideosList
 import com.jbak.videos.types.SearchItem
 import com.jbak.videos.types.TypeSearchItem
+import com.jbak.videos.types.VideosList
 import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 import tenet.lib.base.Err
-import tenet.lib.base.MyLog
+import java.io.IOException
+
+
 
 class Web{
 
@@ -53,21 +54,20 @@ class Web{
             }
         }
     }
+    abstract class Loader : okhttp3.Callback {
 
-    abstract class OnLoad<T> : Callback<T> {
-        abstract fun onLoad(call: Call<T>, response: Response<T>?, throwable: Throwable?)
-        protected fun onLoadEnd(call: Call<T>, response: Response<T>?, throwable: Throwable?){
-            MyLog.log("Url loaded: "+call.request().toString())
-            throwable?.let { MyLog.err(it) }
-            response?.let { MyLog.log(" Responce: "+it.toString()) }
-            onLoad(call, response, throwable)
-        }
-        override fun onResponse(call: Call<T>, response: Response<T>) {
-            onLoadEnd(call,response, null)
+        abstract fun onLoad(call: okhttp3.Call, response: okhttp3.Response?, e: IOException?)
+        private fun loaded(call: okhttp3.Call, response: okhttp3.Response?, e: IOException?){
+            onLoad(call,response, e)
         }
 
-        override fun onFailure(call: Call<T>, t: Throwable) {
-            onLoadEnd(call,null, t)
+        override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+            loaded(call, response, null)
+        }
+
+        override fun onFailure(call: okhttp3.Call, e: IOException) {
+            loaded(call, null, e)
         }
     }
+
 }

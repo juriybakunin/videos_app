@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.drawerlayout.widget.DrawerLayout
+    <RelativeLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/mDrawerLayout"
->
-    <RelativeLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -20,12 +15,25 @@
                 android:layout_alignParentBottom="true"
                 android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         />
+        <LinearLayout android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:id="@+id/panel"
+                      android:orientation="vertical"
+                      android:layout_above="@+id/customToolbar"
+        >
+            <com.jbak.videos.view.ItemListView
+                    android:id="@+id/providerList"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:itemType="TEXT"
+            />
+        </LinearLayout>
         <com.jbak.videos.view.ItemListView
                 android:id="@+id/itemList"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_above="@+id/customToolbar"
-                app:layout_constraintBottom_toTopOf="@id/customToolbar"/>
+                android:layout_above="@+id/panel"
+                />
 
         <com.jbak.videos.view.ItemListView
                 android:id="@+id/mListMenu"
@@ -36,47 +44,13 @@
                 android:layout_marginRight="16dp"
                 android:visibility="invisible"
                 android:layout_above="@+id/customToolbar"
-                app:layout_constraintBottom_toTopOf="@id/customToolbar"/>
-        <com.jbak.videos.view.VideoPlayerView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:id="@+id/mVideoPlayer"
-        />
-        <com.jbak.videos.view.WebPlayer
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:id="@+id/mWebPlayer"
-        />
+                />
 
-        <com.jbak.videos.view.MyYouTubePlayerView
-                android:id="@+id/mYouTubePlayer"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
+    <ProgressBar
+            android:id="@+id/loadProgress"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_centerInParent="true"
 
-        <TextView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:id="@+id/errorText"
-                android:gravity="center"
-                android:visibility="invisible"
-                android:background="@android:color/white"
-                android:textColor="@android:color/holo_red_dark"
-        />
-
-        <ProgressBar
-                android:id="@+id/loadProgress"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:layout_centerInParent="true"
-
-        />
-    </RelativeLayout>
-    <com.google.android.material.navigation.NavigationView
-            android:id="@+id/mNavView"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="start"
-            android:fitsSystemWindows="true"
-            app:menu="@menu/sidebar"
     />
-</androidx.drawerlayout.widget.DrawerLayout>
+    </RelativeLayout>

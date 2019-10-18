@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
+       android:orientation="vertical"
+       android:layout_width="match_parent"
+       android:layout_height="match_parent"
+       tools:parentTag="android.widget.LinearLayout"
+       android:background="@android:color/black"
+       android:gravity="center_horizontal"
+
+
+    >
+
+        <TextView android:layout_width="match_parent"
+                  android:text="@string/app_name"
+                  android:id="@+id/mTitle"
+                  android:layout_height="wrap_content"
+                  android:padding="10dp"
+                  android:textSize="20sp"
+                  style="@style/shadowed_text"
+        />
+        <ImageView android:layout_width="match_parent"
+                   android:layout_height="0dp"
+                   android:layout_weight="1"
+                   android:layout_below="@+id/mTitle"
+                   android:layout_above="@+id/mProgress"
+                   android:layout_marginBottom="40dp"
+                   android:scaleType="fitCenter"
+                   android:id="@+id/mImage"
+                   android:layout_gravity="center_horizontal"
+                   android:src="@drawable/ic_refresh"
+        />
+        <TextView
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:gravity="center"
+                android:id="@+id/mErrorText"
+                android:text="@string/err_general"
+                android:textColor="@color/orange"
+        />
+        <ProgressBar
+                android:id="@+id/mProgress"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginBottom="40dp"
+        />
+
+</merge>

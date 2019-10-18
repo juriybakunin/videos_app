@@ -2,6 +2,7 @@ package com.jbak.videos
 
 import android.content.SharedPreferences
 import com.jbak.videos.providers.Factory
+import tenet.lib.base.utils.Utils
 
 class Prefs(private var prefs: SharedPreferences) {
     fun saveSearch(query : String){
@@ -13,15 +14,38 @@ class Prefs(private var prefs: SharedPreferences) {
     }
 
     fun setProviderType(type: Factory.Type){
-        prefs.edit().putInt("providerId",type.id).apply()
+        prefs.edit().putString("curProviderId",type.id).apply()
+    }
+    fun setMargins(margins: Boolean){
+        prefs.edit().putBoolean("margins",margins).apply()
+    }
+    fun getMargins() : Boolean{
+        return prefs.getBoolean("margins",true)
     }
 
     fun getProviderType() : Factory.Type{
-        val id = prefs.getInt("providerId", Factory.Type.YOTUBE.id)
+        val id = prefs.getString("curProviderId", Factory.Type.YOTUBE.id)
         for (t in Factory.Type.values()){
-            if(t.id == id)
+            if(t.id.equals(id))
                 return t
         }
         return Factory.Type.YOTUBE
+    }
+
+    fun getPlayInBackground(): Boolean {
+        return prefs.getBoolean("playInBackground", false)
+    }
+
+    fun setPlayInBackground(playInBackground: Boolean){
+        prefs.edit().putBoolean("playInBackground", playInBackground).apply()
+    }
+
+    fun setQuality(quality: Factory.Quality) {
+        prefs.edit().putString("videoQuality",quality.id).apply()
+    }
+
+    fun getQuality() : Factory.Quality {
+        val id = prefs.getString("videoQuality", Factory.Quality.HIGH.id)
+        return Utils.itemById(id, Factory.Quality.values())
     }
 }

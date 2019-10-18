@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                >
+
+    <ImageView android:layout_width="80dp"
+               android:layout_height="80dp"
+               android:layout_alignParentRight="true"
+               android:id="@+id/image"
+               android:src="@mipmap/ic_launcher"
+               android:scaleType="fitCenter"
+                />
+    <TextView android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+                android:text="@string/app_name"
+              android:id="@+id/text"
+              android:textColor="#000000"
+              android:padding="8dp"
+              android:maxLines="2"
+              android:ellipsize="end"
+              android:textSize="16sp"
+                />
+    <LinearLayout
+            android:id="@+id/mCenterButtons"
+            android:gravity="center"
+            android:layout_below="@+id/text"
+              android:orientation="horizontal"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_toLeftOf="@+id/image"
+                >
+    <ImageView
+            android:id="@+id/mPrevious"
+            android:layout_width="40dp"
+            android:src="@drawable/ic_prev"
+            android:layout_height="40dp"
+            android:tint="@color/colorPrimaryDark"
+    />
+    <ImageView
+            android:id="@+id/mPlayPause"
+            android:layout_width="40dp"
+               android:src="@drawable/ic_play"
+            android:tint="@color/colorPrimaryDark"
+               android:layout_height="40dp"
+    />
+    <ImageView
+            android:id="@+id/mNext"
+            android:layout_width="40dp"
+            android:src="@drawable/ic_next"
+            android:tint="@color/colorPrimaryDark"
+            android:layout_height="40dp"
+    />
+
+</LinearLayout>
+</RelativeLayout>
