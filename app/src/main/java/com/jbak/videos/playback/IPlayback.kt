@@ -1,7 +1,7 @@
 package com.jbak.videos.playback
 
-import com.google.android.youtube.player.YouTubePlayer
 import com.jbak.videos.types.IItem
+import com.jbak.videos.types.Media
 import tenet.lib.tv.MediaEventListener
 
 interface IChangeItem {
@@ -23,58 +23,11 @@ interface IPlayback {
     fun durationMillis() : Int
     fun seekToMillis(millis: Long)
     fun clear()
-    fun playUrl(url : String)
+    fun playMedia(media: Media, startPos: Int)
     fun setMargins(margins: Boolean)
     fun addMediaListener(mediaEventListener: MediaEventListener, add: Boolean)
+    fun getVideoSize(width: Boolean) : Int
 
-
-
-    companion object {
-        fun createYoutubeCallback(player: YouTubePlayer) : IPlayback {
-            return YouTubePlayback(player)
-        }
-        class YouTubePlayback(val player: YouTubePlayer) : IPlayback {
-            override fun addMediaListener(mediaEventListener: MediaEventListener, add: Boolean) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun setMargins(margins: Boolean) {
-
-            }
-
-            override fun playUrl(url: String) {
-
-            }
-
-            override fun clear() {
-                player.pause()
-            }
-
-            override fun seekToMillis(millis: Long) {
-                player.seekToMillis(millis.toInt())
-            }
-
-            override fun currentMillis(): Int {
-                return player.currentTimeMillis
-            }
-
-            override fun durationMillis(): Int {
-                return player.durationMillis
-            }
-
-            override fun isPlaying(): Boolean {
-                return player.isPlaying
-            }
-
-            override fun pause() {
-                player.pause()
-            }
-
-            override fun play() {
-                player.play()
-            }
-        }
-    }
 }
 
 interface IPlayer{

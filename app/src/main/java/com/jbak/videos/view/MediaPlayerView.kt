@@ -11,6 +11,7 @@ import android.widget.FrameLayout
 import com.jbak.videos.App
 import com.jbak.videos.playback.IPlayback
 import com.jbak.videos.playback.PlayerUtils
+import com.jbak.videos.types.Media
 import tenet.lib.base.MyLog
 import tenet.lib.tv.MediaEventListener
 import tenet.lib.tv.MediaEventListener.*
@@ -19,11 +20,14 @@ class MediaPlayerView(context: Context, attributeSet: AttributeSet?)
     : SurfaceView(context,attributeSet),
     IPlayback,MediaEventListener
 {
+
+    constructor(context: Context) : this(context, null)
+    private var mStartPos: Int = 0
     var mUrl: String? = null
     val mediaPlayer : MediaPlayer = MediaPlayer()
     var prepared = false
     var mMargins =  false
-    val mediaHandler = MediaEventListener.MediaPlayerListeners()
+    val mediaHandler = MediaPlayerListeners()
     init {
         mediaPlayer.audioSessionId = App.get().audioSession
         mediaHandler.setToMediaPlayer(mediaPlayer)
@@ -92,20 +96,12 @@ class MediaPlayerView(context: Context, attributeSet: AttributeSet?)
         return 0
     }
 
-    fun getMediaWidth(): Int {
+    override fun getVideoSize(width: Boolean) : Int{
         if(prepared) {
-            return mediaPlayer.videoWidth
+            return  if(width) mediaPlayer.videoWidth else mediaPlayer.videoHeight
         }
         return 0
     }
-
-    fun getMediaHeight(): Int {
-        if(prepared) {
-            return mediaPlayer.videoHeight
-        }
-        return 0
-    }
-
 
     override fun durationMillis(): Int {
         if(prepared) {
@@ -125,14 +121,16 @@ class MediaPlayerView(context: Context, attributeSet: AttributeSet?)
         prepared = false
     }
 
-    override fun playUrl(url: String) {
+
+    override fun playMedia(media: Media, startPos: Int) {
+        mStartPos = startPos;
         prepared = false
-        mUrl = url
+        mUrl = media.videoUri.toString()
         mediaPlayer.reset()
-        mediaPlayer.setDataSource(url)
+        mediaPlayer.setDataSource(media.videoUri.toString())
         mediaPlayer.prepareAsync()
-        val  am = App.get().getSystemService(Service.AUDIO_SERVICE)
     }
+
 
     override fun onVideoEvent(event: Int, player: Any?, param1: Any?, param2: Any?) {
         Func.logMediaEvent(event, param1, param2)
@@ -141,11 +139,20 @@ class MediaPlayerView(context: Context, attributeSet: AttributeSet?)
         }
         else if(event == EVENT_MEDIA_PREPARE){
             prepared = true
-            mediaPlayer.start()
+            if(mStartPos > 0){
+                mediaPlayer.seekTo(mStartPos)
+            } else {
+                mediaPlayer.start()
+            }
         } else if(event == EVENT_MEDIA_COMPLETED){
 
         } else if(event == EVENT_MEDIA_SIZE_CHANGED){
             setSize(param1 as Int, param2 as Int);
+        } else if(event == EVENT_MEDIA_SEEK_COMPLETED) {
+            if(mStartPos > 0) {
+                mStartPos = 0
+                mediaPlayer.start()
+            }
         }
 
     }

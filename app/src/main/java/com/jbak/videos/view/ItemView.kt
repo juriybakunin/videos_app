@@ -57,8 +57,10 @@ class ItemView : LinearLayout{
         if(mImage == null)
             return
         val url = item.getImageUrl()
-        if(TextUtils.isEmpty(url))
+        if(TextUtils.isEmpty(url)) {
+            mImage.setImageDrawable(null)
             return
+        }
         Glide.with(context)
             .load(item.getImageUrl())
             .apply(IMAGE_OPTIONS)

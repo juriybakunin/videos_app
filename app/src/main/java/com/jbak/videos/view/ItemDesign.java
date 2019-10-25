@@ -10,13 +10,16 @@ public class ItemDesign extends HashMap<Integer,Integer> {
     public static final int TEXT_COLOR_CURRENT = 3;
     public static final int TEXT_SHADOW = 4;
     public static final int TEXT_BACK_COLOR_CURRENT = 5;
+    public static final int TEXT_SIZE = 6;
+    public static final int ITEM_PADDING = 7;
+    public static final int TEXT_PADDING = 8;
 
     public ItemDesign set(int key, int val){
         put(key, val);
         return this;
     }
 
-    private final void setProperty(ItemView itemView, boolean current, Integer key, Integer val){
+    private void setProperty(ItemView itemView, boolean current, Integer key, Integer val){
         switch (key){
             case TEXT_COLOR:
                 if(!current) {
@@ -27,6 +30,15 @@ public class ItemDesign extends HashMap<Integer,Integer> {
                 if(current) {
                     itemView.getTextView().setTextColor(val);
                 }
+                break;
+            case TEXT_SIZE:
+                itemView.getTextView().setTextSize(val);
+                break;
+            case ITEM_PADDING:
+                itemView.setPadding(val,val,val,val);
+                break;
+            case TEXT_PADDING:
+                itemView.getTextView().setPadding(val,val,val,val);
                 break;
             case TEXT_BACK_COLOR:
                 if(!current) {

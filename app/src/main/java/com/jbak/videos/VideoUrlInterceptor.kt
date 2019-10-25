@@ -4,8 +4,10 @@ import android.net.Uri
 import android.os.Looper
 import android.webkit.*
 import com.jbak.videos.types.IItem
+import com.jbak.videos.types.Media
 import com.jbak.videos.types.SerialList
-import kotlinx.android.synthetic.main.controller_layout.*
+import com.jbak.videos.view.VideoPlayer
+import kotlinx.android.synthetic.main.video_player_layout.view.*
 import okhttp3.Response
 import tenet.lib.base.MyLog
 import tenet.lib.base.utils.Utils
@@ -13,23 +15,23 @@ import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.lang.Exception
 
-
-class VideoUrlInterceptor (controllerDialog : ControllerDialog){
+private val ABOUT_BLANK = "about:blank";
+class VideoUrlInterceptor (videoPlayer : VideoPlayer){
     companion object {
         public val MOZILLA_CLIENT = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
         public val OLD_WEBVIEW_AGENT = "Mozilla/5.0 (Linux; U; Android 4.1.1; en-gb; Build/KLP) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Safari/534.30"
     }
-    val controllerDialog:ControllerDialog
+    val videoPlayer: VideoPlayer
     val mWebView: WebView
-    private lateinit var mPlayItem: IItem.IResourceIntercept
+    private var mPlayItem: IItem.IResourceIntercept? = null
     @Volatile private var mIterceptResource = true;
     private var mLoadUrl : String? = null;
-    private val defaultUserAgent : String;
+    val defaultUserAgent : String;
 
     init {
-        this.controllerDialog = controllerDialog
+        this.videoPlayer = videoPlayer
         WebView.setWebContentsDebuggingEnabled(true)
-        mWebView = controllerDialog.mWebView
+        mWebView = videoPlayer.mWebView
         val ws = mWebView.settings;
         ws.loadsImagesAutomatically = false
         ws.blockNetworkImage = true
@@ -41,6 +43,10 @@ class VideoUrlInterceptor (controllerDialog : ControllerDialog){
         mWebView.webViewClient = object : WebViewClient(){
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
+                if(ABOUT_BLANK.equals(url))
+                    return
+                mPlayItem?.onWebViewEvent(IItem.LOAD_EVENT_PAGE_FINISHED, url, this@VideoUrlInterceptor)
+                MyLog.log("Page finished: $url")
                 //setLoad(false)
             }
 
@@ -89,8 +95,8 @@ class VideoUrlInterceptor (controllerDialog : ControllerDialog){
         if(urlStr.equals(mLoadUrl)){
             resultStr = "Same url";
         } else if(mIterceptResource == true) {
-            val result = mPlayItem.interceptResource(uri, request, this)
-            if (result == IItem.STOP_LOAD) {
+            val result = mPlayItem?.interceptResource(uri, request, this)
+            if (result == IItem.INTERCEPTED) {
                 resultStr = "Intercepted int="+mIterceptResource
                 mIterceptResource = false
 //                stopLoad()
@@ -131,16 +137,19 @@ class VideoUrlInterceptor (controllerDialog : ControllerDialog){
     }
 
     fun loadEmpty(){
-        loadUrl("about:blank",false)
+        loadUrl(ABOUT_BLANK,false)
     }
-
-    fun videoUrlLoaded(url: String) {
+    fun videoMediaLoaded(media: Media) {
         if(Utils.isUIThread()) {
             loadEmpty()
-            controllerDialog.playUrl(url)
+            videoPlayer.playMedia(media)
         } else {
-            mWebView.post({videoUrlLoaded(url)})
+            mWebView.post {videoMediaLoaded(media)}
         }
+
+    }
+    fun videoUrlLoaded(url: String) {
+        videoMediaLoaded(Media(url))
     }
 
     fun videoLoadError(response: Response?, e: Exception?) {
@@ -157,14 +166,14 @@ class VideoUrlInterceptor (controllerDialog : ControllerDialog){
     fun videoLoadError(error: String) {
         if(Utils.isUIThread()) {
             loadEmpty()
-            controllerDialog.setError(error)
+            videoPlayer.setError(error)
         } else {
             mWebView.post({videoLoadError(error)})
         }
     }
 
     fun setSerial(serial: SerialList) {
-        controllerDialog.setSerial(serial)
+        videoPlayer.setSerial(serial)
     }
 
 }

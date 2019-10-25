@@ -33,4 +33,22 @@
     <string name="kinokrad_provider">Kinokrad</string>
     <string name="season">Сезон</string>
     <string name="err_load_url">Ошибка загрузки ссылки</string>
+    <string name="kinogo_provider">Kinogo</string>
+    <string name="video_info">Инфо о видео</string>
+    <string name="share">Поделиться</string>
+    <string name="video_menu">Меню видео</string>
+    <string name="open_page">Открыть страницу</string>
+    <string name="open_browser">Открыть в браузере</string>
+    <string name="history">История</string>
+    <string name="delete_history_item">Удалить из истории</string>
+    <string name="seek_video_start">В начало</string>
+    <string name="movement">Прокрутка</string>
+    <string name="seek_minus_5">- 5 cек</string>
+    <string name="seek_minus_10">- 10 сек</string>
+    <string name="seek_plus5">+ 5 сек</string>
+    <string name="seek_minus_1_minute">- 1 мин</string>
+    <string name="seek_plus_10">+ 10 сек</string>
+    <string name="seek_plus_1_minute">+ 1 мин</string>
+    <string name="load_media_url">Загрузка ссылки на видео</string>
+    <string name="load_media">Загрузка видео</string>
 </resources>

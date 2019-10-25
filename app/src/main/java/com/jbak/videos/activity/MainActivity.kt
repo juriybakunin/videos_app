@@ -12,16 +12,14 @@ import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.isVisible
 import com.jbak.setTrueFullscreen
 import com.jbak.videos.*
-import com.jbak.videos.playback.PlaybackService
 import com.jbak.videos.providers.Factory
 import com.jbak.videos.types.IItem
+import com.jbak.videos.types.VideoItem
 import com.jbak.videos.types.VideosList
-import com.jbak.videos.view.CustomSearchView
-import com.jbak.videos.view.ItemDesign
-import com.jbak.videos.view.ItemListView
-import com.jbak.videos.view.TechMenu
+import com.jbak.videos.view.*
 import kotlinx.android.synthetic.main.activity_main.*
 import tenet.lib.base.Err
 import tenet.lib.base.MyLog
@@ -35,13 +33,13 @@ class MainActivity : AppCompatActivity(),
     DataLoader.OnItemsLoaded,
     SearchView.OnQueryTextListener,
     ItemListView.OnItemClick,
-        CustomSearchView.OnSearchShowChangeListener
+        CustomSearchView.OnSearchShowChangeListener,
+        DbListener
     {
 
-    var dataLoader:DataLoader? = null;
+        var dataLoader:DataLoader? = null;
     var mSearchView:CustomSearchView? = null;
     var queryText : String = "";
-    lateinit var controllerDlg : ControllerDialog
     private val mCompleteLoader = Web.createCompleteLoader(object : DataLoader.OnItemsLoaded{
         override fun onItemsLoaded(err: Err, videosList: VideosList) {
             MyLog.log(err.toString())
@@ -75,41 +73,46 @@ class MainActivity : AppCompatActivity(),
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(customToolbar)
+        setWindow()
         itemList.onItemClick = this
+        itemList.onImageItemClick = this
+        itemList.processClickImage = false
         mProvider = Factory.getProvider(App.prefs().getProviderType())
         createProvidersPanel()
-        dataLoader = mProvider.createSearchLoader(this)
-        controllerDlg = ControllerDialog(this, mProvider)
-        controllerDlg.setOnCancelListener {
-            mListMenu.postDelayed({
-                window.setTrueFullscreen(false)
-            },100L)
+        mVideoPlayer.onClosePlayer = object : Runnable{
+            override fun run() {
+                setWindow()
+            }
+
         }
-        App.PLAYER = controllerDlg
+        dataLoader = mProvider.createSearchLoader(this)
+        App.PLAYER = mVideoPlayer
         setLoadData(false)
+        Db.get().listeners.registerListener(this)
     }
 
     override fun onPause() {
-        controllerDlg.onActivityEvent(ACTIVITY_EVENT_PAUSE)
+        mVideoPlayer.onActivityEvent(ACTIVITY_EVENT_PAUSE)
         super.onPause()
     }
 
     override fun onResume() {
         super.onResume()
-        controllerDlg.onActivityEvent(ACTIVITY_EVENT_RESUME)
+        mVideoPlayer.onActivityEvent(ACTIVITY_EVENT_RESUME)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        controllerDlg.onActivityEvent(ACTIVITY_EVENT_DESTROY)
+        Db.get().listeners.unregisterListener(this)
+        mVideoPlayer.onActivityEvent(ACTIVITY_EVENT_DESTROY)
     }
 
     private fun createProvidersPanel() {
         val providers = IItem.ItemList();
         var id : String? = null
         for (t in Factory.Type.values()) {
-            if(t == Factory.Type.NONE)
-                break
+            if(!t.showInMenu)
+                continue
             if(mProvider.getType() == t)
                 id = t.id;
             providers.add(t)
@@ -168,7 +171,7 @@ class MainActivity : AppCompatActivity(),
         dataLoader = mProvider.createSearchLoader(this)
         setLoadData(true)
         dataLoader!!.loadSearch(queryText)
-        itemList.setPageLoader(dataLoader!!).setStartAfter(10)
+        itemList.setPageLoader(dataLoader!!)?.setStartAfter(10)
         return true;
     }
 
@@ -190,12 +193,6 @@ class MainActivity : AppCompatActivity(),
         return super.dispatchKeyEvent(event)
     }
 
-
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        controllerDlg.onConfigurationChanged(newConfig)
-    }
 
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -227,7 +224,7 @@ class MainActivity : AppCompatActivity(),
             R.id.search_history -> showSearchHistory()
             R.id.select_provider -> showProvidersMenu()
             R.id.tech_menu -> TechMenu().showMain(this)
-            R.id.refresh -> changeProviderType(mProvider.getType())
+            R.id.refresh -> refresh()
             R.id.settings -> showSettings()
             else -> {
                 return false
@@ -236,16 +233,19 @@ class MainActivity : AppCompatActivity(),
         return true
     }
 
-        private fun showSettings() {
-            val set = IItem.ItemList();
-            SettingDlg().setGeneral().show(this)
-        }
+    private fun showSettings() {
+        val set = IItem.ItemList();
+        SettingDlg().setGeneral().show(this)
+    }
 
-        private fun showProvidersMenu() {
+    private fun showProvidersMenu() {
+        val items = IItem.ItemList()
         val list = ArrayList<String>()
         for (t in Factory.Type.values()) {
-            if(t != Factory.Type.NONE)
-                list.add(t.getName())
+            if(!t.showInMenu)
+                continue
+            items.add(t)
+            list.add(t.getName())
         }
         val array = list.toArray(arrayOfNulls<String>(list.size))
         AlertDialog.Builder(this)
@@ -253,7 +253,7 @@ class MainActivity : AppCompatActivity(),
                 override fun onClick(dialog: DialogInterface?, which: Int) {
                     if(which < 0)
                         return
-                    changeProviderType(Factory.Type.values()[which])
+                    changeProviderType(items[which] as Factory.Type)
                 }
             })
             .setTitle(R.string.select_provider)
@@ -295,13 +295,24 @@ class MainActivity : AppCompatActivity(),
 
     override fun onItemsLoaded(err: Err, videosList: VideosList) {
         setLoadData(false)
-        if(err.isOk) {
-            itemList.itemAdapter.setList(videosList)
-        }
-        MyLog.log("Loaded")
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        setWindow()
+    }
+
+    fun setWindow() {
+        val land = App.res().configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val player = mVideoPlayer.isVisible
+        window.setTrueFullscreen(land, player, false)
     }
 
     override fun onBackPressed() {
+        if(mVideoPlayer.visibility == View.VISIBLE){
+            mVideoPlayer.onBackPressed()
+            return
+        }
         if(closeListMenu()){
             return
         }
@@ -310,7 +321,13 @@ class MainActivity : AppCompatActivity(),
 
 
     override fun onItemClick(iItem: IItem, view: View) {
-        controllerDlg.playItem(iItem, itemList.itemAdapter.items)
+        if(view.id == R.id.mImage2) {
+            VideoMenu(this, iItem as VideoItem).showMenu()
+        } else {
+            val playlist = if(dataLoader == null) itemList.itemAdapter.items else dataLoader
+            mVideoPlayer.playItem(iItem, playlist)
+            setWindow()
+        }
 
     }
 
@@ -350,6 +367,21 @@ class MainActivity : AppCompatActivity(),
             showSearchHistory()
         else
             closeListMenu()
+    }
+    override fun onDbEvent(event: Int, id: String) {
+        if(event == Db.DB_DELETE_HISTORY && mProvider.getType() == Factory.Type.HISTORY) {
+            val list = itemList.itemAdapter.items as? VideosList
+            if(list == null)
+                    return
+            val index = list.deleteById(id)
+            if(index>=0){
+                itemList.itemAdapter.notifyItemRemoved(index)
+            }
+        }
+    }
+
+    fun refresh() {
+        changeProviderType(mProvider.getType())
     }
 
     enum class SearchAction{

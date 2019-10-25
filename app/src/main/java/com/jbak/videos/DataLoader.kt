@@ -6,13 +6,15 @@ import com.jbak.videos.types.VideosList
 import kotlinx.coroutines.*
 import tenet.lib.base.Err
 import tenet.lib.base.MyLog
+import tenet.lib.base.utils.Listeners
 
-abstract class DataLoader(private var onItemsLoaded: OnItemsLoaded, relatedItem: IItem? = null) : RecyclerUtils.IPageLoader {
+abstract class DataLoader(onItemsLoaded: OnItemsLoaded, relatedItem: IItem? = null) : RecyclerUtils.IPageLoader, IItem.IItemList {
     var myJob : Job? = null;
     private val videosList : VideosList;
     var relatedItem: IItem? = null
-
+    val itemsLoadListeners = Listeners<OnItemsLoaded>()
     init {
+        itemsLoadListeners.registerListener(onItemsLoaded)
         this.relatedItem = relatedItem
         videosList = createVideosList();
     }
@@ -35,6 +37,14 @@ abstract class DataLoader(private var onItemsLoaded: OnItemsLoaded, relatedItem:
         return VideosList()
     }
 
+    override fun getCount(): Int {
+        return videosList.count
+    }
+
+    override fun getItem(pos: Int): IItem {
+        return videosList[pos]
+    }
+
     override fun loadNextPage() {
         MyLog.log("Loader page: q=${videosList.query}; first=${videosList.isFirstPage()} exist=${videosList.size}")
         val uiScope = CoroutineScope(Dispatchers.Main)
@@ -52,7 +62,8 @@ abstract class DataLoader(private var onItemsLoaded: OnItemsLoaded, relatedItem:
             MyLog.log("Loaded ok=${err.isOk} items=${videosList.size}")
 
             withContext(Dispatchers.Main){
-                onItemsLoaded.onItemsLoaded(err, videosList)
+                for (l in itemsLoadListeners.list)
+                    l.onItemsLoaded(err, videosList)
                 myJob = null;
             }
         }

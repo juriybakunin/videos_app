@@ -397,6 +397,10 @@ public class DbUtils {
 			mWhere+=_SPACE+OR+_SPACE;
 			return this;
 		}
+		public Select startAndCount(int start, int count){
+			this.mLimit=""+start+", "+count;
+			return this;
+		}
 		/** Выставляет лимит количества выбираемых значений
 		 * @param limit Лимит выборки */
 		public Select limit(int limit)
@@ -491,6 +495,15 @@ public class DbUtils {
 				MyLog.err(e);
 			}
 			return -1;
+		}
+		public int insertOrUpdate(SQLiteDatabase db,ContentValues cv){
+			int upd = update(db,cv);
+			if(upd > 0)
+				return 1;
+			if(db.insert(mTable,StrConst.BLOB,cv) <0)
+				return  -1;
+			return 1;
+
 		}
 		public int update(SQLiteDatabase db,ContentValues cv)
 		{

@@ -19,6 +19,7 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.List;
 
+import com.jbak.videos.types.IItem;
 import tenet.lib.base.Interfaces;
 import tenet.lib.base.MyLog;
 import tenet.lib.base.TenetApp;
@@ -288,6 +289,12 @@ public class Utils {
                 return item;
         }
         return null;
+    }
+
+    public static boolean isId(IItem item, String id){
+        if(item == null || id == null)
+            return false;
+        return item.getId().equals(id);
     }
 
     public static int indexById(String id, Iterable<? extends Interfaces.IdNamed> items){

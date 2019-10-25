@@ -5,17 +5,18 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.webkit.WebResourceRequest;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.jbak.videos.types.IItem;
+import com.jbak.videos.types.VideoItem;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import tenet.lib.base.MyLog;
 import tenet.lib.base.utils.NetUtils;
 import tenet.lib.base.utils.TimeUtils;
 
 import java.util.List;
 
-public class RutubeVideo implements IItem.IUrlItem, IItem.IVideoUrlLoader {
+public class RutubeVideo extends VideoItem implements  IItem.IVideoUrlLoader {
     private static final String URL_OPT = "https://rutube.ru/api/play/options/"+ID+"/?format=json&no_404=true";
     public Boolean has_high_quality;
     public String commentEditors;
@@ -32,7 +33,6 @@ public class RutubeVideo implements IItem.IUrlItem, IItem.IVideoUrlLoader {
     public Boolean is_livestream;
     public Boolean isOfficial;
     public String publication_ts;
-    public String id;
     public Category category;
     public Integer hits;
     public String feedUrl;
@@ -52,17 +52,25 @@ public class RutubeVideo implements IItem.IUrlItem, IItem.IVideoUrlLoader {
     @NotNull
     @Override
     public String getImageUrl() {
-        return thumbnail_url;
+        if(TextUtils.isEmpty(getImage())) {
+            setImage(thumbnail_url);
+        }
+        return getImage();
     }
 
     @Override
     public String getShortDescText() {
-        return duration>0? TimeUtils.getTimeRangeText(duration, true, null).toString() : "";
+        if(TextUtils.isEmpty(getDur())){
+            setDur(duration!=null && duration>0? TimeUtils.getTimeRangeText(duration, true, null).toString() : "");
+        }
+        return super.getShortDescText();
     }
 
     @Override
     public CharSequence getName() {
-        return title;
+        if(TextUtils.isEmpty(name))
+            name = title;
+        return super.getName();
     }
 
     @Override
@@ -70,6 +78,11 @@ public class RutubeVideo implements IItem.IUrlItem, IItem.IVideoUrlLoader {
         return id;
     }
 
+    @Nullable
+    @Override
+    public String getItemUrl() {
+        return "https://rutube.ru/video/"+id;
+    }
 
     @Override
     public String loadVideoUrlSync() throws Throwable {

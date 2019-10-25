@@ -30,14 +30,13 @@
                    android:src="@drawable/ic_refresh"
         />
         <TextView
-                android:visibility="gone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="10dp"
                 android:gravity="center"
-                android:id="@+id/mErrorText"
+                android:id="@+id/mLoadText"
                 android:text="@string/err_general"
-                android:textColor="@color/orange"
+
         />
         <ProgressBar
                 android:id="@+id/mProgress"

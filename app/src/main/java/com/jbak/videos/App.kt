@@ -4,8 +4,11 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.res.Resources
 import android.media.AudioManager
+import com.google.android.exoplayer2.Player
 import com.jbak.videos.playback.PlayerReceiver
 import com.jbak.videos.playback.IPlayer
+import com.jbak.videos.playback.PlayerUtils
+import com.jbak.videos.providers.YouTube
 import tenet.lib.base.MyLog
 import tenet.lib.base.TenetApp
 
@@ -20,6 +23,8 @@ class App : TenetApp() {
         super.onCreate()
         MyLog.setDefTag("Videos")
         prefs = Prefs(getSharedPreferences("prefs",0));
+        YouTube.USE_INTERCEPTOR = prefs.getYoutubeInterceptor()
+        PlayerUtils.disableSSLCertificateChecking()
     }
 
 

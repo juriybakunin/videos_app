@@ -1,42 +1,45 @@
-package com.jbak.videos
+package com.jbak.videos.view
 
 import android.annotation.SuppressLint
-import android.app.Dialog
+import android.app.Activity
 import android.content.Context
+import android.content.DialogInterface
 import android.content.res.Configuration
 import android.os.Handler
 import android.os.Message
-import android.text.TextUtils
+import android.util.AttributeSet
 import android.view.*
-import androidx.appcompat.app.AlertDialog
+import android.widget.FrameLayout
 import androidx.core.view.isVisible
-import com.google.android.youtube.player.YouTubePlayer
-import com.jbak.setTrueFullscreen
-import com.jbak.setVisGone
-import com.jbak.setVisInvis
+import com.jbak.*
+import com.jbak.videos.*
 import com.jbak.videos.playback.*
-import com.jbak.videos.providers.Factory
 import com.jbak.videos.types.IItem
+import com.jbak.videos.types.Media
 import com.jbak.videos.types.SerialList
+import com.jbak.videos.types.VideoItem
 import com.jbak.videos.view.ItemListView.OnItemClick
-import com.jbak.videos.view.OnSerialLoaded
-import kotlinx.android.synthetic.main.controller_layout.*
+import kotlinx.android.synthetic.main.video_player_layout.view.*
 import kotlinx.android.synthetic.main.playlist_view.view.*
 import kotlinx.coroutines.*
 import tenet.lib.base.MyLog
 import tenet.lib.base.utils.Listeners
 import tenet.lib.base.utils.Utils
 import tenet.lib.tv.MediaEventListener
+import java.lang.Runnable
 import java.util.concurrent.TimeUnit
 
-val ACTIVITY_EVENT_PAUSE = 1
-val ACTIVITY_EVENT_RESUME = 2
-val ACTIVITY_EVENT_DESTROY = 3
+const val ACTIVITY_EVENT_PAUSE = 1
+const val ACTIVITY_EVENT_RESUME = 2
+const val ACTIVITY_EVENT_DESTROY = 3
 
-class ControllerDialog(
-    context: Context,
-    videoProvider: Factory.VideoProvider
-) : Dialog(context, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen),
+enum class PlayerType(val id: Int) {
+    MEDIA_PLAYER(1), EXO_PLAYER(2)
+}
+
+class VideoPlayer(
+    context: Context, attributeSet: AttributeSet
+) : FrameLayout(context, attributeSet),
     View.OnClickListener,
     OnItemClick,
     MediaEventListener,
@@ -44,23 +47,29 @@ class ControllerDialog(
     INextPrevious,
     OnSerialLoaded
 
-
 {
 
-    private var mUrl: String? = null
+    internal var mMedia: Media? = null
     private var startOnResume: Boolean = false
     var activityPaused = false
-    private var mCurItem: IItem? = null
+    var mCurItem: IItem? = null
     var isVideoLoaded = false
-    var iPlayback : IPlayback
+    lateinit var iPlayback : IPlayback
     var isHidden = true;
     var mUrlLoaderJob : Job? = null
-    private var topView : ViewGroup
     private var itemsList: IItem.IItemList? = null
     private val mInterceptor : VideoUrlInterceptor
-    private var mProvider : Factory.VideoProvider
     private var isItemStarted = false
-    private val mInitContext : Context
+    var onClosePlayer : Runnable? = null
+
+    val mInitContext : Context
+    val window : Window?
+        get() {
+            if (context is Activity) {
+                return (context as Activity).window
+            }
+            return null
+        }
     private val changeItemListeners = Listeners<IChangeItem>()
     private var mMargins = true
         set(value) {
@@ -73,45 +82,58 @@ class ControllerDialog(
 
     init {
         mInitContext = context
-        requestWindowFeature(Window.FEATURE_NO_TITLE)
-        topView = LayoutInflater.from(context).inflate(R.layout.controller_layout,null,false) as ViewGroup
-        setContentView(topView)
-        iPlayback = mPlayer
-        mVideoSeek.iPlayback = iPlayback
+        LayoutInflater.from(context).inflate(R.layout.video_player_layout,this,true) as ViewGroup
         mInterceptor = VideoUrlInterceptor(this)
-        topView.setOnClickListener(this)
+        setPlayerType(App.prefs().getPlayerType(),true)
+        setOnClickListener(this)
         mPlayPause.setOnClickListener(this)
         mNext.setOnClickListener(this)
         mPrevious.setOnClickListener(this)
         mChangeMargins.setOnClickListener(this)
         mPlayerMenu.setOnClickListener(this)
+        mClose.setOnClickListener(this)
 
         mMargins = App.prefs().getMargins()
-        mProvider = videoProvider
-        mPlayer.addMediaListener(this, true)
-        mPlaylistView.mListView.onItemClick = this
+        mPlaylistView.videoPlayer = this
         mPlaylistView.mSerialView.serialListeners.registerListener(this)
         mPlaylistView.setOnSeriesClick(object : OnItemClick{
             override fun onItemClick(iItem: IItem, view: View) {
-                playItem(iItem,itemsList)
+                playItem(iItem,itemsList,false)
             }
-
         })
-        setOnShowListener {
-            setOrientation()
-            window.decorView.setOnSystemUiVisibilityChangeListener{
-                if(!isHidden)
-                    onSystemUiVisibilityChange(it)
-            }
+    }
+
+    fun setPlayerType(playerType: PlayerType, init: Boolean = false){
+        if(!init) {
+            iPlayback.addMediaListener(this, false)
         }
-
-
+        val v: View
+        if(playerType == PlayerType.EXO_PLAYER) {
+            val exo = ExoPlayerView(context)
+            exo.userAgent = mInterceptor.defaultUserAgent
+            v = exo
+        } else {
+            v = MediaPlayerView(context)
+        }
+        if(mPlayerContainer.childCount > 1)
+            mPlayerContainer.removeViewAt(0)
+        mPlayerContainer.addView(v)
+        iPlayback = v as IPlayback
+        mVideoSeek.iPlayback = iPlayback
+        iPlayback.addMediaListener(this, true)
     }
 
     fun setOrientation(portrait: Boolean = App.res().configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-        if(!isHidden)
-            window?.setTrueFullscreen(!portrait)
+
+//        if(!isHidden)
+//            window?.setTrueFullscreen(!portrait)
+        mClose.setVisInvis(!portrait)
     }
+
+//    fun setOrientation(portrait: Boolean = App.res().configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+//        if(!isHidden)
+//            window?.setTrueFullscreen(!portrait)
+//    }
 
     @SuppressLint("HandlerLeak")
     private val dlgHandler = object : Handler(){
@@ -140,7 +162,10 @@ class ControllerDialog(
         fun autoHide(){
             autoHideDlg = true
             removeMessages(Const.MSG_AUTOHIDE)
-            sendEmptyMessageDelayed(Const.MSG_AUTOHIDE, Const.AUTOHIDE_MILLIS)
+            sendEmptyMessageDelayed(
+                Const.MSG_AUTOHIDE,
+                Const.AUTOHIDE_MILLIS
+            )
         }
 
 
@@ -151,31 +176,61 @@ class ControllerDialog(
         mInterceptor.cancel()
     }
 
-    override fun onBackPressed() {
+    fun saveSerialPosition() {
+        mCurItem?.let {
+            val s = mPlaylistView.mSerialView.serial
+            if (s != null) {
+                Db.get().setSerialSeriesId(s.parentItem.id, it.id)
+            }
+        }
+    }
+    fun savePosition(zero: Boolean) {
+        mCurItem?.let {
+            val pos = if(zero) 0 else iPlayback.currentMillis();
+            PosCache.INST.setVideoPos(it, pos)
+            MyLog.log("Save position: ${it.name} $pos")
+            val s = mPlaylistView.mSerialView.serial
+            if(s != null) {
+                val firstSeries = s.isFirstSeries(it.id)
+                if(firstSeries)
+                    PosCache.INST.setVideoPos(s.parentItem,pos)
+                saveSerialPosition()
+            }
+        }
+
+    }
+
+    fun onBackPressed() {
+        PlayerReceiver.useAudioFocus(false)
+        savePosition(false)
         PlaybackService.stop()
         App.PLAYER = null
         iPlayback.clear()
         dlgHandler.onClose()
         cancelDownload()
         isHidden = true
-        cancel()
         mBufferingText.setVisInvis(false)
-        window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        mCurItem = null
+        visibility = View.INVISIBLE
     }
 
-    override fun show() {
+    fun show() {
+        visibility = View.VISIBLE
         App.PLAYER = this
         isHidden = false
         iPlayback.setMargins(mMargins)
-        super.show()
-        window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
-
-    fun onSystemUiVisibilityChange(visibility: Int) {
-        if (visibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0) {
-            dlgHandler.restoreScreen()
+    override fun setVisibility(visibility: Int) {
+        super.setVisibility(visibility)
+        if(isVisible) {
+            setOrientation()
+            window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            onClosePlayer?.run()
         }
+
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
@@ -209,29 +264,24 @@ class ControllerDialog(
         return false
     }
 
-    override fun onClick(v: View?) {
-        if(mPlayPause == v){
-            iPlayback?.run {
-                if(isPlaying()){
-                    pause()
-                } else {
-                    play()
+    override fun onClick(v: View) {
+        when(v) {
+            mClose -> onBackPressed()
+            this -> hidePlayback()
+            mPrevious -> playNextPreviousMedia(false)
+            mNext -> playNextPreviousMedia(true)
+            mPlayerMenu -> showMenu()
+            mChangeMargins -> {
+                mMargins = !mMargins
+                iPlayback.setMargins(mMargins)
                 }
-            }
-        }
-        if(topView == v){
-            hidePlayback()
-        } else if(mPrevious == v) {
-            playNextPreviousMedia(false)
-        }  else if(mNext == v) {
-            playNextPreviousMedia(true)
-        } else if(mPlayerMenu == v){
-            showMenu()
-        }
+            mPlayPause->
+                if(iPlayback.isPlaying()){
+                    iPlayback.pause()
+                } else {
+                    iPlayback.play()
+                }
 
-        if(mChangeMargins == v){
-            mMargins = !mMargins
-            iPlayback?.setMargins(mMargins)
         }
     }
 
@@ -243,7 +293,7 @@ class ControllerDialog(
             item = it.getNextPreviousSeries(mCurItem!!, next)
         }
         if(item == null && itemsList != null) {
-            item = Utils.getNextPreviousItem(next,mCurItem!!.id,itemsList as List<IItem>)
+            item = itemsList?.getNextPreviousItem(next, mCurItem!!.id, true)
         }
         return item
     }
@@ -269,7 +319,7 @@ class ControllerDialog(
     fun setError(error: String) {
         if(Utils.isUIThread()) {
             MyLog.log("Error: "+error)
-            mPlayer.clear()
+            iPlayback.clear()
             mLoadView.setError(error)
         } else {
             mWebView.post {
@@ -277,25 +327,28 @@ class ControllerDialog(
             }
         }
     }
-    fun playUrl(url: String) {
+
+    fun playMedia(media: Media) {
         if(isHidden) {
             return
         }
         if(Utils.isUIThread()) {
-            mUrl = url
-            MyLog.log("play video: "+url)
+            mLoadView.setLoadText(App.str(R.string.load_media))
+            mMedia = media
+            MyLog.log("play video: $media")
             mWebView.setVisInvis(false)
             mPlayerContainer.setVisInvis(true)
-            mPlayer.playUrl(url)
+            val pos = PosCache.INST.getVideoPos(mCurItem!!)
+            iPlayback.playMedia(mMedia!!,pos)
         } else {
             mWebView.post {
-                playUrl(url)
+                playMedia(media)
             }
         }
 
     }
 
-    fun playUrlLoader(iUrlLoader : IItem.IVideoUrlLoader) {
+    fun startUrlLoader(iUrlLoader : IItem.IVideoUrlLoader) {
         mUrlLoaderJob?.cancel()
         val uiScope = CoroutineScope(Dispatchers.Main)
         mUrlLoaderJob = uiScope.launch(Dispatchers.IO) {
@@ -307,7 +360,7 @@ class ControllerDialog(
             }
             withContext(Dispatchers.Main){
                 if(url != null) {
-                    playUrl(url)
+                    playMedia(Media(url))
                 } else {
                     onVideoEvent(MediaEventListener.EVENT_MEDIA_ERROR,null,42,312);
                 }
@@ -317,52 +370,70 @@ class ControllerDialog(
         }
     }
 
+    fun getItemFromSerial(item: IItem) : IItem{
+        val list = SerialCacher.INST.getSerial(item) ?: return item
+        val serId = Db.get().getSerialSeriesId(list.parentItem.id) ?: return item
+        val ret = list.getItemById(serId) ?: return item
+        return ret
+    }
 
-    fun playItem(item: IItem, items: IItem.IItemList?) {
-        mCurItem = item
-        mProvider = Factory.getItemProvider(item)
-        if(isHidden)
+
+    fun playItem(item: IItem, items: IItem.IItemList?, checkSerialSeries: Boolean = true) {
+        if(item.isId(mCurItem)) {
+            savePosition(true)
+        } else if(isVideoLoaded && mCurItem != null) {
+            savePosition(false)
+        }
+
+        mCurItem = item; //getItemFromSerial(item)
+        if(isHidden) {
             show()
+        }
+        if(checkSerialSeries)
+            mCurItem = getItemFromSerial(item)
         for (listener in changeItemListeners.list){
-            listener.onCurItemChange(item)
+            listener.onCurItemChange(mCurItem!!)
         }
         iPlayback.clear()
         cancelDownload()
         isItemStarted = false
         isVideoLoaded = false
-        MyLog.log("=== START LOAD ${item.id} ${item.name}")
-        mVideoTitle.text = item.name
+        MyLog.log("=== START LOAD ${mCurItem!!.id} ${mCurItem!!.name}")
+        mVideoTitle.text = mCurItem!!.name
         this.itemsList = items
 
-        val intercept = item is  IItem.IResourceIntercept
+        val intercept = mCurItem!! is  IItem.IResourceIntercept
         mPlayerContainer.setVisInvis(false)
         mPlaybackView.setVisInvis(false)
 
 
         mWebView.setVisInvis(intercept)
-        mLoadView.setItem(item)
+        mLoadView.setItem(mCurItem!!)
         mLoadView.setLoad(true)
-        val url = UrlCache.get().getVideoUrl(item);
-        mCacheLoad = url != null
-        if(url != null) {
-            MyLog.log("Play cached url $url")
-            playUrl(url)
+        val media = UrlCache.get().getVideoUrl(mCurItem!!);
+        mCacheLoad = media != null
+        if(!mCacheLoad) {
+            mLoadView.setLoadText(App.str(R.string.load_media_url))
         }
-        else if(item is IItem.IVideoUrlLoader) {
-            playUrlLoader(item)
-        } else if(item is  IItem.IResourceIntercept) {
-            mInterceptor.loadUrlItem(item)
+        if(media != null) {
+            MyLog.log("Play cached: $media")
+            playMedia(media)
         }
-        mPlaylistView.openItem(item, itemsList)
+        else if(mCurItem is IItem.IVideoUrlLoader) {
+            startUrlLoader(mCurItem as IItem.IVideoUrlLoader)
+        } else if(mCurItem is  IItem.IResourceIntercept) {
+            mInterceptor.loadUrlItem(mCurItem as IItem.IResourceIntercept)
+        }
+        mPlaylistView.openItem(mCurItem!!, itemsList)
     }
 
 
     fun playAlternativeUrl() : Boolean {
-        if(!isVideoLoaded && mCurItem is IItem.INextUrl ){
-            val nextUrl = (mCurItem as IItem.INextUrl).getNextUrl(mPlayer.mUrl)
-            if(!TextUtils.isEmpty(nextUrl)) {
+        if(!isVideoLoaded && mCurItem is IItem.INextMedia ){
+            val nextMedia = (mCurItem as IItem.INextMedia).getNextMedia(mMedia)
+            if(nextMedia != null) {
                 MyLog.log("Play alternate url")
-                playUrl(nextUrl!!)
+                playMedia(nextMedia!!)
                 return true
             }
         }
@@ -372,15 +443,16 @@ class ControllerDialog(
     override fun onVideoEvent(event: Int, player: Any?, param1: Any?, param2: Any?) {
         if(event == MediaEventListener.EVENT_MEDIA_ERROR){
             if(mCacheLoad && mCurItem != null) {
-                UrlCache.get().setVideoUrl(mCurItem!!, null)
+                UrlCache.get().setVideoMedia(mCurItem!!, null)
             }
             else if(playAlternativeUrl()) {
 
             } else {
-                val err = App.str(R.string.err_general)+" Err $param1 : $param2"
+                val err = App.str(R.string.err_general) +" Err $param1 : $param2"
                 mLoadView.setError(err)
             }
         }
+
         if(event == MediaEventListener.EVENT_MEDIA_BUFFERING_START) {
             var text = App.str(R.string.buffering);
             if(param1 is Int) {
@@ -395,44 +467,49 @@ class ControllerDialog(
             return
         }
         if(event == MediaEventListener.EVENT_MEDIA_COMPLETED) {
+            savePosition(true)
+            PlayerReceiver.useAudioFocus(false)
             if(!playNextPreviousMedia(true)) {
                 onBackPressed()
             }
         }
         if(event == MediaEventListener.EVENT_MEDIA_STARTED) {
             if(!isVideoLoaded) {
-                UrlCache.get().setVideoUrl(mCurItem!!,mPlayer.mUrl)
-                isVideoLoaded = true
-                mPlayerContainer.setVisInvis(true)
-                mLoadView.setLoad(false)
-                showPlayback()
+                onVideoLoaded()
             }
+            PlayerReceiver.useAudioFocus(true)
+
         }
         updateController()
     }
 
-    fun onConfigurationChanged(newConfig: Configuration) {
+    private fun onVideoLoaded() {
+        UrlCache.get().setVideoMedia(mCurItem!!,mMedia)
+        isVideoLoaded = true
+        mPlayerContainer.setVisInvis(true)
+        mLoadView.setLoad(false)
+        Db.get().addToHistory(mCurItem as VideoItem)
+        showPlayback()
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
         if(isHidden)
             return
         setOrientation()
         mPlayerContainer.post {
-            iPlayback?.setMargins(mMargins)
+            iPlayback.setMargins(mMargins)
         }
     }
 
     fun showMenu(){
-        val info = """
-            Size: ${mPlayer.getMediaWidth()}x${mPlayer.getMediaHeight()}
-            Id: ${mCurItem?.id}
-            Name: ${mCurItem?.name}
-            Url: ${mPlayer.mUrl}
-        """.trimIndent()
+        val menu = VideoMenu(mInitContext, mCurItem as VideoItem)
+        menu.videoPlayer = this
+        menu.setOnCancelListener(object : DialogInterface.OnCancelListener{
+            override fun onCancel(dialog: DialogInterface?) {
+                setOrientation()
+            }
 
-        AlertDialog.Builder(mInitContext)
-            .setTitle(R.string.player_info)
-            .setMessage(info)
-            .show()
-
+        }).showMenu()
     }
 
     override fun getNextPrevious(): INextPrevious {
@@ -460,7 +537,7 @@ class ControllerDialog(
 
     fun onActivityEvent(event:Int) {
         when(event){
-            ACTIVITY_EVENT_PAUSE->{
+            ACTIVITY_EVENT_PAUSE ->{
                 activityPaused = true
                 if(App.prefs().getPlayInBackground()) {
                     if(!isHidden)
@@ -474,7 +551,7 @@ class ControllerDialog(
                 }
             }
 
-            ACTIVITY_EVENT_RESUME->{
+            ACTIVITY_EVENT_RESUME ->{
                 if(startOnResume) {
                     iPlayback.play()
                 }
@@ -483,7 +560,7 @@ class ControllerDialog(
                 activityPaused = false
             }
 
-            ACTIVITY_EVENT_DESTROY->{
+            ACTIVITY_EVENT_DESTROY ->{
                 iPlayback.clear()
                 PlaybackService.stop()
             }

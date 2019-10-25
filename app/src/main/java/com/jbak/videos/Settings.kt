@@ -3,12 +3,14 @@ package com.jbak.videos
 import android.content.Context
 import android.view.View
 import androidx.appcompat.app.AlertDialog
+import com.jbak.videos.activity.MainActivity
 import com.jbak.videos.providers.Factory
+import com.jbak.videos.providers.YouTube
 import com.jbak.videos.types.IItem
 import com.jbak.videos.view.ItemListView
-import tenet.lib.base.types.BaseIdNamed
+import com.jbak.videos.view.PlayerType
+import kotlinx.android.synthetic.main.activity_main.*
 import tenet.lib.base.utils.Utils
-import java.util.*
 import kotlin.collections.ArrayList
 
 
@@ -27,6 +29,55 @@ abstract class ItemSetting : IItem{
     abstract fun onMenuItemSelected(pos: Int, context: Context)
 }
 
+class SetYouTubeItem : ItemSetting() {
+    val items = mutableListOf("Extractor", "Interceptor")
+    override fun getMenuItems(): List<String> {
+        return items
+    }
+
+    override fun onMenuItemSelected(pos: Int, context: Context) {
+        App.prefs().setYoutubeInterceptor(pos == 1)
+        if(context is MainActivity) {
+            context.refresh()
+        }
+        UrlCache.get().reset()
+    }
+
+    override fun getName(): CharSequence {
+        return "You tube item"
+    }
+
+    override fun getShortDescText(): String? {
+        return if(YouTube.USE_INTERCEPTOR) items[1] else items[0]
+    }
+
+
+
+}
+
+class SetPlayerType : ItemSetting() {
+    val items = mutableListOf("Media", "Exo")
+    override fun getMenuItems(): List<String> {
+        return items
+    }
+
+    override fun onMenuItemSelected(pos: Int, context: Context) {
+        val t = if(pos==0) PlayerType.MEDIA_PLAYER else PlayerType.EXO_PLAYER
+        App.prefs().setPlayerType(t)
+        if(context is MainActivity) {
+            context.mVideoPlayer.setPlayerType(t)
+        }
+    }
+
+    override fun getName(): CharSequence {
+        return "Player type"
+    }
+
+    override fun getShortDescText(): String? {
+        return if(App.prefs().getPlayerType() == PlayerType.MEDIA_PLAYER) items[0] else items[1]
+    }
+
+}
 class SetQuality : ItemSetting() {
     val menu : List<String>
     init {
@@ -103,6 +154,8 @@ class SettingDlg(
 
     fun setGeneral() : SettingDlg{
         settings.add(SetPlayInBackground())
+        settings.add(SetPlayerType())
+        settings.add(SetYouTubeItem())
         settings.add(SetQuality())
         return this
     }

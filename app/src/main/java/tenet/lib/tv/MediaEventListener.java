@@ -43,10 +43,11 @@ public interface MediaEventListener {
     int EVENT_MEDIA_STARTED = 0x200;
 
     int EVENT_MEDIA_PAUSED = 0x400;
-    int EVENT_MEDIA_PLAYED = 0x200;
+    int EVENT_MEDIA_PLAYED = 0x800;
 
     /** Событие изменения настроек видео */
-    int EVENT_MEDIA_SETTINGS_CHANGED = 0x400;
+    int EVENT_MEDIA_SETTINGS_CHANGED = 0x1000;
+    int EVENT_MEDIA_SEEK_COMPLETED = 0x2000;
 
     int ERROR_LOADING = -1024;
 
@@ -64,7 +65,8 @@ public interface MediaEventListener {
         MediaPlayer.OnVideoSizeChangedListener,
             MediaPlayer.OnCompletionListener,
             MediaPlayer.OnInfoListener,
-            MediaPlayer.OnBufferingUpdateListener
+            MediaPlayer.OnBufferingUpdateListener,
+            MediaPlayer.OnSeekCompleteListener
     {
         private boolean mBufferingStarted = false;
         /** Устанавливает на MediaPlayer все доступные обработчики */
@@ -89,6 +91,8 @@ public interface MediaEventListener {
                 player.setOnCompletionListener(this);
             if(Utils.intHas(eventMask, EVENT_MEDIA_BUFFERING_START))
                 player.setOnBufferingUpdateListener(this);
+            if(Utils.intHas(eventMask, EVENT_MEDIA_SEEK_COMPLETED))
+                player.setOnSeekCompleteListener(this);
         }
 
         public void notifyListeners(int event,Object mediaPlayer,Object param1,Object param2){
@@ -146,6 +150,11 @@ public interface MediaEventListener {
                 notifyListeners(EVENT_MEDIA_BUFFERING_START, mp, percent, null);
             }
         }
+
+        @Override
+        public void onSeekComplete(MediaPlayer mp) {
+            notifyListeners(EVENT_MEDIA_SEEK_COMPLETED, mp, null, null);
+        }
     }
 
     class Func{
@@ -163,8 +172,11 @@ public interface MediaEventListener {
         }
 
         public static boolean isErrorNetwork(int event, Object param1, Object param2){
-            int code = (int)param1, extra = (int) param2;
-            return event == EVENT_MEDIA_ERROR && code == 1 && extra == MediaPlayer.MEDIA_ERROR_IO;
+            if(param1 instanceof Integer && param2 instanceof Integer) {
+                int code = (int) param1, extra = (int) param2;
+                return event == EVENT_MEDIA_ERROR && code == 1 && extra == MediaPlayer.MEDIA_ERROR_IO;
+            }
+            return false;
         }
 
         public static String getEventDescript(int event, Object param1, Object param2){

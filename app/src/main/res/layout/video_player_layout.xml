@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<merge
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        tools:parentTag="android.widget.FrameLayout"
         >
 
 <WebView
@@ -15,11 +16,11 @@
             android:id="@+id/mPlayerContainer"
              android:background="#000000"
         >
-<com.jbak.videos.view.MediaPlayerView
-        android:id="@+id/mPlayer"
-        android:layout_gravity="center"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+<!--<com.jbak.videos.view.MediaPlayerView-->
+        <!--android:id="@+id/mPlayer"-->
+        <!--android:layout_gravity="center"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"/>-->
     <!--<com.jbak.videos.view.VideoPlayerView-->
             <!--android:id="@+id/mPlayer"-->
             <!--android:layout_gravity="center"-->
@@ -117,6 +118,14 @@
             android:textSize="20sp"
             android:padding="10dp"
             style="@style/shadowed_text"/>
-
+    <ImageView android:layout_width="28dp"
+               android:layout_height="28dp"
+               android:padding="2dp"
+                android:layout_alignParentRight="true"
+               android:src="@drawable/ic_close"
+               android:background="@drawable/round_back"
+               android:id="@+id/mClose"
+            />
 </RelativeLayout>
-</FrameLayout>
+
+</merge>

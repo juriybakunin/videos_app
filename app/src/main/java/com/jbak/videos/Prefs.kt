@@ -2,6 +2,8 @@ package com.jbak.videos
 
 import android.content.SharedPreferences
 import com.jbak.videos.providers.Factory
+import com.jbak.videos.providers.YouTube
+import com.jbak.videos.view.PlayerType
 import tenet.lib.base.utils.Utils
 
 class Prefs(private var prefs: SharedPreferences) {
@@ -11,6 +13,14 @@ class Prefs(private var prefs: SharedPreferences) {
 
     fun getSearch() : String{
         return prefs.getString("searchQuery","")?:""
+    }
+
+    fun setYoutubeInterceptor(interceptor: Boolean){
+        YouTube.USE_INTERCEPTOR = interceptor
+        prefs.edit().putBoolean("useYoutubeInterceptor", interceptor).apply()
+    }
+    fun getYoutubeInterceptor() : Boolean{
+        return prefs.getBoolean("useYoutubeInterceptor",false)
     }
 
     fun setProviderType(type: Factory.Type){
@@ -47,5 +57,14 @@ class Prefs(private var prefs: SharedPreferences) {
     fun getQuality() : Factory.Quality {
         val id = prefs.getString("videoQuality", Factory.Quality.HIGH.id)
         return Utils.itemById(id, Factory.Quality.values())
+    }
+
+    fun getPlayerType(): PlayerType {
+        val id = prefs.getInt("playerType", PlayerType.MEDIA_PLAYER.id)
+        return if(id == PlayerType.MEDIA_PLAYER.id) PlayerType.MEDIA_PLAYER else PlayerType.EXO_PLAYER
+    }
+
+    fun setPlayerType(playerType: PlayerType) {
+        prefs.edit().putInt("playerType", playerType.id).apply()
     }
 }

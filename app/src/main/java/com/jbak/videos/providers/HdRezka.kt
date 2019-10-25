@@ -21,7 +21,6 @@ import java.io.IOException
 
 open class HDRezkaItem : VideoItem(), IItem.IResourceIntercept {
 
-
     fun loadWebResource(resUri: Uri, resource: WebResourceRequest, onLoad: Web.Loader){
         val url = resUri.toString()
         val rb = Request.Builder()
@@ -65,7 +64,7 @@ open class HDRezkaItem : VideoItem(), IItem.IResourceIntercept {
             }
             if(checkSeason(resUri)) {
                 loadWebResource(resUri, resource, onLoad)
-                return STOP_LOAD
+                return INTERCEPTED
             }
             return BLOCK_ONCE;
         } else if(resUri.hasInPath("video")
@@ -73,7 +72,7 @@ open class HDRezkaItem : VideoItem(), IItem.IResourceIntercept {
             &&"1plus1.video".equals(resUri.host)) {
             val playerUrl = "${resUri}&autoplay=true"
             webPlayer.loadUrl(playerUrl, true)
-            return STOP_LOAD;
+            return INTERCEPTED;
         }
         return CONTINUE
     }
@@ -91,7 +90,7 @@ open class HDRezkaItem : VideoItem(), IItem.IResourceIntercept {
             return proc;
         } else if(resUri.isExtension(".m3u8")) {
             interceptor.videoUrlLoaded(resUri.toString())
-            return STOP_LOAD;
+            return INTERCEPTED;
         } else if("grandcentral.1plus1.video".equals(resUri.host)){
             loadWebResource(resUri,resource,object :Web.Loader(){
                 override fun onLoad(call: Call, response: Response?, e: IOException?) {
@@ -104,7 +103,7 @@ open class HDRezkaItem : VideoItem(), IItem.IResourceIntercept {
 
                 }
             });
-            return STOP_LOAD
+            return INTERCEPTED
         }
         return CONTINUE;
     }
@@ -112,6 +111,9 @@ open class HDRezkaItem : VideoItem(), IItem.IResourceIntercept {
 }
 
 class HdRezka : Factory.BaseVideoProvider() {
+    override fun getItemClass(): Class<out VideoItem> {
+        return HDRezkaItem::class.java
+    }
 
     companion object {
         val SEARCH_URL = "http://hdrezka.ag/index.php?do=search&subaction=search"
@@ -136,6 +138,7 @@ class HdRezka : Factory.BaseVideoProvider() {
         fun getEpisodeHash(season:String, episode: String): String {
             return "#t:0-s:$season-e:$episode"
         }
+
 
         fun parseElement(el : Element) : IItem {
             val item = HDRezkaItem()

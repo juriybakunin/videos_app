@@ -8,23 +8,16 @@ import com.jbak.isExtension
 import com.jbak.videos.*
 import com.jbak.videos.model.kinokrad.PlayEntry
 import com.jbak.videos.model.kinokrad.Playlist
-import com.jbak.videos.model.rutube.RutubeSearchResult
 import com.jbak.videos.types.*
 import com.jbak.videos.types.IItem.LOAD_EVENT_START
-import com.jbak.videos.types.IItem.STOP_LOAD
+import com.jbak.videos.types.IItem.INTERCEPTED
 import kotlinx.coroutines.*
 import okhttp3.Call
 import okhttp3.Response
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import retrofit2.Retrofit
-import retrofit2.http.GET
-import retrofit2.http.Query
 import tenet.lib.base.Err
-import tenet.lib.base.MyLog
-import tenet.lib.base.StringLoader
-import tenet.lib.tv.MediaEventListener
 import java.io.IOException
 
 private val BASE_URL = "https://kinokrad.co/"
@@ -51,7 +44,7 @@ class KinokradItem : HDRezkaItem(){
                 }
             }
             loadWebResource(resUri, resource, onLoader);
-            return STOP_LOAD
+            return INTERCEPTED
         }
 
         return super.processVideoUri(resUri, resource, webPlayer)
@@ -73,6 +66,7 @@ class KinokradItem : HDRezkaItem(){
 }
 
 class Kinokrad : Factory.BaseVideoProvider(){
+
     companion object {
 
         fun createSerialFromPlaylist(item: KinokradItem, playEntry: PlayEntry) : SerialList{
@@ -102,6 +96,11 @@ class Kinokrad : Factory.BaseVideoProvider(){
             return item
         }
     }
+
+    override fun getItemClass(): Class<out VideoItem> {
+        return KinokradItem::class.java
+    }
+
     override fun createSearchLoader(onItemsLoaded: DataLoader.OnItemsLoaded): DataLoader {
         return object : DataLoader(onItemsLoaded){
             override fun loadDataSync(videosList: VideosList): Err {

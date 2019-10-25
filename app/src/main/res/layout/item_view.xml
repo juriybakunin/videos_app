@@ -48,6 +48,16 @@
                   android:textColor="@android:color/white"
                   android:padding="2dp"
         />
+        <ImageView android:layout_width="24dp"
+                  android:layout_height="24dp"
+                  android:background="@color/transparentBack"
+                  android:id="@+id/mImage2"
+                  android:textSize="12sp"
+                  app:layout_constraintTop_toTopOf="parent"
+                  android:textColor="@android:color/white"
+                  android:padding="2dp"
+                  android:src="@drawable/ic_more"
+                  tools:ignore="MissingConstraints"/>
 
         <ProgressBar android:layout_width="match_parent"
                    android:layout_height="match_parent"

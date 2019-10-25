@@ -5,7 +5,7 @@ import com.jbak.videos.providers.HDRezkaItem
 import tenet.lib.base.utils.Utils
 
 
-open class VideosList() : ArrayList<IItem>(), IItem.IItemList {
+open class VideosList() : IItem.ItemList() {
 
     companion object {
         val FIRST_PAGE = "FIRSTPAGETOKEN";
@@ -85,6 +85,22 @@ open class Season(name:String, id:String) : VideosList(),IItem {
 }
 open class SerialList() : VideosList() {
     lateinit var parentItem : IItem
+    val firstSeries : IItem?
+        get() {
+            val seas = firstOrNull() as? Season
+            if(seas != null) {
+                return seas.firstOrNull()
+            }
+            return null
+        }
+
+    fun isFirstSeries(id: String): Boolean {
+        val fs = firstSeries
+        if(fs != null) {
+            return fs.id.equals(id)
+        }
+        return false
+    }
 
     fun getNextPreviousSeries(iItem: IItem, next: Boolean) : IItem? {
         var item = iItem
@@ -111,11 +127,24 @@ open class SerialList() : VideosList() {
     }
 
     fun hasItem(item:IItem) : Boolean {
-        return parentItem.equals(item) || getSeason(item) != null
+        return getItemById(item.id) != null
     }
 
     fun getNextSeason(next: Boolean, season: Season) : Season? {
         return Utils.getNextPreviousItem(next,season.id,this,false) as? Season
+    }
+    fun getItemById(id: String) : IItem? {
+        if(parentItem.id.equals(id))
+            return parentItem
+        for (s in this){
+            val season = s as? Season
+            if(season != null){
+                val serie = Utils.itemById(id, season)
+                if(serie != null)
+                    return serie;
+            }
+        }
+        return null
     }
 
     fun getSeason(item:IItem) : Season? {

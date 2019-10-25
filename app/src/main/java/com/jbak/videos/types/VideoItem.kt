@@ -1,21 +1,30 @@
 package com.jbak.videos.types
 
 import com.google.gson.Gson
+import com.jbak.videos.providers.Factory
 import tenet.lib.base.types.BaseIdNamed
 
 open class VideoItem() : BaseIdNamed<VideoItem>(), IItem {
 
     companion object {
         val GSON = Gson()
-        val DELIM = "\n- # -\n"
+        val DELIM = "\n-=-\n"
     }
+
+    val providerType: Factory.Type
+        get() = Factory.getItemType(this)
 
     var image : String = ""
     var dur : String = ""
+    var extra: String = ""
 
 
     override fun getShortDescText(): String? {
         return dur
+    }
+
+    open fun getItemUrl(): String? {
+        return id
     }
 
     override fun getImageUrl(): String {
@@ -29,8 +38,9 @@ open class VideoItem() : BaseIdNamed<VideoItem>(), IItem {
         this.dur = dur
     }
 
+
     fun getStringData(): String {
-        return "$id$DELIM$name$DELIM$image$DELIM$dur"
+        return "$id$DELIM$name$DELIM$image$DELIM$dur$DELIM$extra"
     }
 
     fun setStringData(data: String) {
@@ -43,6 +53,7 @@ open class VideoItem() : BaseIdNamed<VideoItem>(), IItem {
         name = items[index++]
         image = items[index++]
         dur = items[index++]
+        extra = items[index++]
         return index;
     }
 

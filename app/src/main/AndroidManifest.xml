@@ -21,6 +21,7 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity android:name=".activity.WebViewActivity"/>
         <service android:name=".playback.PlaybackService"/>
         <receiver android:name=".playback.PlayerReceiver">
             <intent-filter>
@@ -31,9 +32,6 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="@string/act_receiver_previous"/>
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
     </application>

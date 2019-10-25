@@ -8,14 +8,13 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
-import android.widget.RelativeLayout
 import com.bumptech.glide.Glide
 import com.jbak.setVisGone
 import com.jbak.setVisInvis
+import com.jbak.videos.App
 import com.jbak.videos.R
 import com.jbak.videos.types.IItem
 import kotlinx.android.synthetic.main.load_view.view.*
-import kotlinx.android.synthetic.main.video_player_view.view.*
 
 class LoadView(context: Context, attributeSet: AttributeSet?) : LinearLayout(context,attributeSet){
     constructor(context: Context) : this(context, null)
@@ -26,6 +25,11 @@ class LoadView(context: Context, attributeSet: AttributeSet?) : LinearLayout(con
         gravity = Gravity.CENTER_HORIZONTAL
     }
 
+    fun setLoadText(text: CharSequence?){
+        setLoadTextColor(false)
+        mLoadText.text = text
+    }
+
     fun setLoad(load: Boolean){
         setVisInvis(load)
         if(load) {
@@ -34,13 +38,17 @@ class LoadView(context: Context, attributeSet: AttributeSet?) : LinearLayout(con
         }
     }
 
+    fun setLoadTextColor(err:Boolean) {
+        mLoadText.setTextColor(if(err) App.res().getColor(R.color.orange) else Color.WHITE)
+    }
+
     fun setError(text:CharSequence?) {
         val err = !TextUtils.isEmpty(text)
-        mErrorText.setVisGone(err)
-        mErrorText.setText(text)
+        mLoadText.setText(text)
+        setLoadTextColor(err)
         if(err) {
             setVisInvis(true)
-            mProgress.setVisGone(false)
+            mProgress.setVisInvis(false)
         }
     }
 

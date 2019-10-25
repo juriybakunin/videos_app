@@ -4,7 +4,9 @@ import com.jbak.videos.DataLoader
 import com.jbak.videos.SerialLoader
 import com.jbak.videos.types.VideosList
 import com.jbak.videos.model.rutube.RutubeSearchResult
+import com.jbak.videos.model.rutube.RutubeVideo
 import com.jbak.videos.types.IItem
+import com.jbak.videos.types.VideoItem
 import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -13,6 +15,9 @@ import retrofit2.http.Query
 import tenet.lib.base.Err
 
 class RuTube : Factory.BaseVideoProvider(){
+    override fun getItemClass(): Class<out VideoItem> {
+        return RutubeVideo::class.java
+    }
 
     override fun getType(): Factory.Type {
         return Factory.Type.RUTUBE

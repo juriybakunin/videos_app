@@ -110,6 +110,11 @@ class SerialView(context: Context, attributeSet: AttributeSet):
                 return
             }
         }
+        val cached = SerialCacher.INST.getSerial(curItem)
+        cached?.let {
+            setSerialList(it)
+            return
+        }
         val loader = provider.createSerialLoader(curItem, object : DataLoader.OnItemsLoaded{
             override fun onItemsLoaded(err: Err, videosList: VideosList) {
                 MyLog.log("Serial loaded")

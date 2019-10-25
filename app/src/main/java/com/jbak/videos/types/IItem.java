@@ -7,13 +7,16 @@ import androidx.annotation.Nullable;
 import com.jbak.videos.VideoUrlInterceptor;
 import org.jetbrains.annotations.NotNull;
 import tenet.lib.base.Interfaces;
+import tenet.lib.base.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 
 public interface IItem extends Interfaces.IdNamed {
     int CONTINUE = 1;
-    int STOP_LOAD = 2;
+    int INTERCEPTED = 2;
     int BLOCK_ONCE = 3;
 
     int LOAD_EVENT_START = 1;
@@ -22,6 +25,7 @@ public interface IItem extends Interfaces.IdNamed {
 
 
     String ID = "[ID]";
+    String URL = "[URL]";
     IItemList EMPTY_ITEM_LIST = new IItemList() {
         @Override
         public int getCount() {
@@ -44,7 +48,10 @@ public interface IItem extends Interfaces.IdNamed {
     }
 
     class ItemList extends ArrayList<IItem> implements IItemList{
-
+        public ItemList() {}
+        public <T extends IItem> ItemList(T[] items){
+            Collections.addAll(this, items);
+        }
         @Override
         public int getCount() {
             return size();
@@ -54,24 +61,30 @@ public interface IItem extends Interfaces.IdNamed {
         public IItem getItem(int pos) {
             return get(pos);
         }
-    }
+        public int indexById(String id) {
+            return Utils.indexById(id, this);
+        }
+        public int deleteById(String id) {
+            int i = indexById(id);
+            if(i < 0)
+                return -1;
+            remove(i);
+            return i;
+        }
 
-/** Элемент, содержащий контент в виде ссылки */
-    interface IUrlItem extends IItem{
     }
-
 
 
 /** Элемент, который содержит несколько источников контента */
-    interface INextUrl {
-        @Nullable String getNextUrl(String url);
+    interface INextMedia {
+        @Nullable Media getNextMedia(Media media);
     }
 
 /** Элемент, умеющий доставать ссылку из вебстраницы, которая загружается по адресу getStartUrl()*/
-    interface IResourceIntercept extends IUrlItem {
+    interface IResourceIntercept  {
 
-        void onWebViewEvent(int event, String url, VideoUrlInterceptor interceptor);
-        int interceptResource(@NonNull Uri resUri, WebResourceRequest request, VideoUrlInterceptor interceptor);
+        void onWebViewEvent(int event, @Nullable String url, @NonNull VideoUrlInterceptor interceptor);
+        int interceptResource(@NonNull Uri resUri, @NonNull WebResourceRequest request, @NonNull VideoUrlInterceptor interceptor);
     }
 
 /** Элемент, умеющий загружать ссылку на контент */
@@ -80,31 +93,5 @@ public interface IItem extends Interfaces.IdNamed {
     }
 
 
-    class ItemIterator implements Iterator<IItem>, Iterable<IItem>{
-        public ItemIterator(@NotNull IItemList list){
-            this.items = list;
-        }
-        @NonNull IItemList items;
-        int pos = -1;
-        @Override
-        public boolean hasNext() {
-            return pos +1 < items.getCount();
-        }
 
-        public void start(){
-            pos = -1;
-        }
-
-        @Override
-        public IItem next() {
-            ++ pos;
-            return items.getItem(pos);
-        }
-
-        @NonNull
-        @Override
-        public Iterator<IItem> iterator() {
-            return this;
-        }
-    }
 }

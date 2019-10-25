@@ -50,6 +50,10 @@ public interface YouTubeFormats {
             return audio != null;
         }
 
+        public boolean hasAudioAndVideo(){
+            return hasAudio() && hasVideo();
+        }
+
         public boolean hasVideo(){
             return video != null && quality != null;
         }
